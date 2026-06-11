@@ -1,8 +1,6 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import PageHeader from "@/components/common/header";
 import ProductsSection from "@/components/shop/product-section";
-import ProductsLoading from "@/components/shop/products-loading";
 import { getCategories, getProducts } from "@/lib/api";
 
 export const metadata: Metadata = {
@@ -38,16 +36,14 @@ export default async function Shop({ searchParams }: ShopPageProps) {
         <main>
             <PageHeader title="Vinyl & Flooring Solutions in Malaysia" />
 
-            <Suspense fallback={<ProductsLoading />}>
-                <ProductsSection
-                    page={page}
-                    category={category}
-                    sort={sort}
-                    itemsPerPage={12}
-                    initialProducts={initialProducts}
-                    initialCategories={initialCategories}
-                />
-            </Suspense>
+            <ProductsSection
+                page={page}
+                category={category}
+                sort={sort}
+                itemsPerPage={12}
+                initialProducts={initialProducts}
+                initialCategories={initialCategories}
+            />
         </main>
     );
 }

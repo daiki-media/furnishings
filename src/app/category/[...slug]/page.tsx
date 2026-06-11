@@ -11,6 +11,18 @@ type Props = {
   params: Promise<{ slug: string[] }>;
 };
 
+// Prerender all category pages (SSG + ISR) — there are only a handful and
+// they then serve from the static cache regardless of CMS availability.
+export async function generateStaticParams() {
+  const categories: Category[] = await getCategories();
+  if (!Array.isArray(categories)) return [];
+  return categories
+    .filter((c) => typeof c.slug === "string" && c.slug.length > 0)
+    .map((c) => ({ slug: [c.slug] }));
+}
+
+export const revalidate = 1800;
+
 export default async function CategoryPageRoute({ params }: Props) {
   const { slug } = await params;
 

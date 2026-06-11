@@ -13,6 +13,18 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
   },
 
+  async redirects() {
+    return [
+      // Old query-string pagination -> static path-based pagination
+      {
+        source: "/blog",
+        has: [{ type: "query", key: "page", value: "(?<p>[2-9]|\\d{2,})" }],
+        destination: "/blog/page/:p",
+        permanent: true,
+      },
+    ];
+  },
+
   async headers() {
     return [
       {

@@ -1,8 +1,6 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import PageHeader from "@/components/common/header";
 import BlogList from "@/components/blogs/blog-section";
-import ProductsLoading from "@/components/shop/products-loading";
 
 export const metadata: Metadata = {
     title: "Flooring & Home Décor Blog Malaysia | Vinyl, SPC & Interior Ideas | Furnishing",
@@ -12,28 +10,19 @@ export const metadata: Metadata = {
     },
 };
 
-interface BlogPageProps {
-  searchParams?: Promise<{
-    page?: string;
-  }>;
-}
-
-export default async function BlogPage({ searchParams }: BlogPageProps) {
-
-  const params = await searchParams;
-  const currentPage = Number(params?.page) || 1;
-
+// Static ISR page (no searchParams): pagination lives at /blog/page/[n], so
+// every blog page is served from the static cache and the CMS is only hit on
+// revalidation — never on a user request.
+export default function BlogPage() {
   return (
     <main>
       <PageHeader title="Flooring & Home Décor Blog in Malaysia" />
 
-      <Suspense fallback={<ProductsLoading />}>
-        <BlogList
-          showPagination={true}
-          itemsPerPage={9}
-          currentPage={currentPage}
-        />
-      </Suspense>
+      <BlogList
+        showPagination={true}
+        itemsPerPage={9}
+        currentPage={1}
+      />
 
     </main>
   );

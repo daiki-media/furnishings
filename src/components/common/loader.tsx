@@ -7,8 +7,13 @@ interface SquareLoaderProps {
 }
 
 const SquareLoader: React.FC<SquareLoaderProps> = ({ text = "Loading..." }) => {
+  // In-flow loader: must NOT be a fixed full-viewport overlay. As a fixed
+  // overlay (fixed inset-0 z-[9999]) any section waiting on data covered the
+  // whole site with a white screen — users saw only "Loading..." until the
+  // CMS responded (or timed out after ~30s) even though the rest of the page
+  // was already rendered underneath.
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-white z-[9999]">
+    <div className="flex w-full items-center justify-center py-16">
       <div className="text-center">
         <div className="relative w-[116px] h-[86px] mx-auto mb-4">
           <div className="square animate-square1" />

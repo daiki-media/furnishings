@@ -3,6 +3,7 @@
 // (?page=N) which the statically-rendered route serves from cache.
 import Image from 'next/image';
 import Link from 'next/link';
+import PaginationLink from '@/components/common/pagination-link';
 import { getBlogs } from '@/lib/api';
 import { Blog, getBlogImageUrl } from '@/lib/interfaces';
 
@@ -27,6 +28,9 @@ function getVisiblePages(currentPage: number, totalPages: number): (number | '..
   return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
 }
 
+// Page 1 lives at /blog; pages 2+ live at /blog/page/N (static ISR routes).
+const pageHref = (page: number) => (page === 1 ? '/blog' : `/blog/page/${page}`);
+
 function PaginationControls({
   currentPage,
   totalPages,
@@ -44,9 +48,9 @@ function PaginationControls({
       {currentPage === 1 ? (
         <span className={`${baseBtn} bg-gray-100 text-gray-400 cursor-not-allowed`}>Previous</span>
       ) : (
-        <Link href={`?page=${currentPage - 1}`} className={`${baseBtn} bg-orange-600 text-white hover:bg-orange-700`}>
+        <PaginationLink href={pageHref(currentPage - 1)} className={`${baseBtn} bg-orange-600 text-white hover:bg-orange-700`}>
           Previous
-        </Link>
+        </PaginationLink>
       )}
 
       <div className="flex space-x-2">
@@ -56,9 +60,9 @@ function PaginationControls({
               ...
             </span>
           ) : (
-            <Link
+            <PaginationLink
               key={page}
-              href={`?page=${page}`}
+              href={pageHref(page)}
               className={`w-10 h-10 flex items-center justify-center rounded-md transition-colors ${
                 currentPage === page
                   ? 'bg-orange-600 text-white'
@@ -66,7 +70,7 @@ function PaginationControls({
               }`}
             >
               {page}
-            </Link>
+            </PaginationLink>
           )
         )}
       </div>
@@ -74,9 +78,9 @@ function PaginationControls({
       {currentPage === totalPages ? (
         <span className={`${baseBtn} bg-gray-100 text-gray-400 cursor-not-allowed`}>Next</span>
       ) : (
-        <Link href={`?page=${currentPage + 1}`} className={`${baseBtn} bg-orange-600 text-white hover:bg-orange-700`}>
+        <PaginationLink href={pageHref(currentPage + 1)} className={`${baseBtn} bg-orange-600 text-white hover:bg-orange-700`}>
           Next
-        </Link>
+        </PaginationLink>
       )}
     </div>
   );

@@ -11,6 +11,24 @@ type Params = {
   slug: string[];
 };
 
+// Prerender the first 60 product pages (SSG + ISR) at their canonical
+// /shop/{category}/{product} paths; the rest render on first request and are
+// cached from then on (dynamicParams ISR). Capped because prerendering all
+// 800+ products fires hundreds of parallel build-time requests at the CMS,
+// which it cannot handle (connect timeouts killed full builds).
+const PRERENDER_PRODUCT_COUNT = 60;
+
+export async function generateStaticParams() {
+  const products = await getProducts();
+  if (!Array.isArray(products)) return [];
+  return products
+    .filter((p: Product) => typeof p.slug === "string" && p.slug.length > 0)
+    .slice(0, PRERENDER_PRODUCT_COUNT)
+    .map((p: Product) => ({
+      slug: [p.category?.slug || "uncategorized", p.slug],
+    }));
+}
+
 export default async function ProductPage({
   params,
 }: {

@@ -1,11 +1,23 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import SingleBlogContent from "@/components/blog/single-blog-content";
-import { getBlogBySlug } from "@/lib/api";
+import { getBlogBySlug, getBlogs } from "@/lib/api";
 
 type Props = {
   params: Promise<{ slug: string }>;
 };
+
+// Prerender every blog post (SSG + ISR): posts are served from the static
+// cache instead of rendering on demand, so they stay fast and available even
+// when the CMS is slow or down. New posts not in the build are rendered on
+// first request (dynamicParams default) and cached from then on.
+export async function generateStaticParams() {
+  const response = await getBlogs();
+  const blogs = response.success && Array.isArray(response.data) ? response.data : [];
+  return blogs
+    .filter((blog: { slug?: string }) => typeof blog.slug === "string" && blog.slug.length > 0)
+    .map((blog: { slug: string }) => ({ slug: blog.slug }));
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
