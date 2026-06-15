@@ -72,7 +72,7 @@ const Navbar = () => {
     // Desktop NavLink component
     const DesktopNavLink = ({ item }: { item: NavItem }) => (
         <div className="relative group">
-            <Link 
+            <a 
                 href={item.href} 
                 className="flex items-center font-semibold px-3 py-2 text-black hover:text-orange-400 transition"
             >
@@ -80,19 +80,19 @@ const Navbar = () => {
                 {item.dropdown && item.dropdown.length > 0 && (
                     <ChevronDown className="h-4 w-4 ml-1 transition-transform group-hover:rotate-180" />
                 )}
-            </Link>
+            </a>
 
             {item.dropdown && item.dropdown.length > 0 && (
                 <div className="absolute top-full left-0 mt-0 bg-white shadow-lg border rounded-md w-48 opacity-0 group-hover:opacity-100 group-hover:visible invisible transition duration-300">
                     <div className="flex flex-col p-2">
                         {item.dropdown.map((cat, idx) => (
-                            <Link 
+                            <a 
                                 key={idx}
                                 href={cat.href} 
                                 className="block px-3 py-2 text-base font-normal hover:bg-gray-100 hover:text-orange-400 rounded-md"
                             >
                                 {cat.label}
-                            </Link>
+                            </a>
                         ))}
                     </div>
                 </div>
@@ -103,24 +103,24 @@ const Navbar = () => {
     // Mobile NavLink component
     const MobileNavLink = ({ item }: { item: NavItem }) => (
         <div className="w-full">
-            <Link
+            <a
                 href={item.href}
                 className="block px-4 py-3 text-lg font-medium text-gray-900 hover:bg-gray-100 rounded-md transition"
                 onClick={() => !item.dropdown && setMobileMenuOpen(false)}
             >
                 {item.label}
-            </Link>
+            </a>
             {item.dropdown && item.dropdown.length > 0 && (
                 <div className="ml-4 border-l pl-4 space-y-2 mt-2">
                     {item.dropdown.map((cat, idx) => (
-                        <Link
+                        <a
                             key={idx}
                             href={cat.href}
                             className="block px-4 py-2 text-base text-gray-700 hover:bg-gray-100 rounded-md"
                             onClick={() => setMobileMenuOpen(false)}
                         >
                             {cat.label}
-                        </Link>
+                        </a>
                     ))}
                 </div>
             )}

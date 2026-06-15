@@ -74,6 +74,7 @@ const AboutUs = () => {
                                     <Image
                                         src={item.image}
                                         alt={item.title}
+                                        fill
                                         className="object-cover h-full w-full rounded-lg"
                                     />
                                 </div>
