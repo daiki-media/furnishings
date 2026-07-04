@@ -13,6 +13,7 @@ const slides = [
         image: '/carpet-tile.jpg',
     },
     {
+        title: 'Vinyl Flooring',
         subtitle: 'Trending Now',
         description:
             'Buy premium vinyl flooring in Malaysia – durable, low-maintenance, and perfect for homes, offices, and commercial spaces.',
