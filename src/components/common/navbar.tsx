@@ -155,7 +155,12 @@ const Navbar = () => {
 
                 {/* Mobile Menu Button */}
                 <div className="md:hidden">
-                    <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={toggleMobileMenu}
+                        aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+                    >
                         {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                     </Button>
                 </div>
@@ -168,7 +173,7 @@ const Navbar = () => {
                         <Link href="/" onClick={() => setMobileMenuOpen(false)}>
                             <Image src="/images/logo (2).png" alt="Logo" width={40} height={40} className="rounded-md" />
                         </Link>
-                        <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
+                        <Button variant="ghost" size="icon" onClick={toggleMobileMenu} aria-label="Close menu">
                             <X className="w-6 h-6" />
                         </Button>
                     </div>

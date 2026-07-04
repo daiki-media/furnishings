@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import SingleProduct from "@/components/shop/single-product";
-import PageHeader from "@/components/common/header";
 import ProductLoading from "@/components/shop/product-loading";
 import { getProductBySlug, getProducts } from "@/lib/api";
 import { getFullImageUrl, Product } from "@/lib/interfaces";
@@ -55,7 +54,9 @@ export default async function ProductPage({
 
     return (
       <main>
-        <PageHeader />
+        {/* No PageHeader here: SingleProduct renders its own product-specific
+            H1 and breadcrumb below. Rendering both produced two <h1>s per
+            product page and a duplicate, client-fetched breadcrumb. */}
         <Suspense fallback={<ProductLoading />}>
           <ProductContent category={category} productSlug={productSlug} />
         </Suspense>

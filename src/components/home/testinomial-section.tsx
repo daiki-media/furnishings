@@ -15,24 +15,6 @@ const TestimonialsSection = () => {
             bgColor: "bg-blue-600"
         },
         {
-            id: 2,
-            name: "Nicola Reddish",
-            date: "2025-06-18",
-            rating: 5,
-            text: "I'm a very nervous patient and I've loved that all my treatment appointments have felt quick and no nonsense and explained all the way through, thank you for making this experience so comfortable and stress-free.",
-            avatar: "N",
-            bgColor: "bg-purple-600"
-        },
-        {
-            id: 3,
-            name: "Bio's Story",
-            date: "2025-06-18",
-            rating: 4,
-            text: "Very clean and modern practice, very nice dentist he listen to all my problem in details no rush, and in the end I was able to leave there practice pain free and with a beautiful smile.",
-            avatar: "B",
-            bgColor: "bg-gray-700"
-        },
-        {
             id: 4,
             name: "Nur Hanis",
             date: "2025-06-18",
@@ -96,6 +78,7 @@ const TestimonialsSection = () => {
                     <button
                         onClick={prevTestimonial}
                         disabled={isAnimating || !canGoPrev}
+                        aria-label="Previous testimonial"
                         className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                         <ChevronLeft className="w-6 h-6 text-gray-600" />
@@ -103,6 +86,7 @@ const TestimonialsSection = () => {
                     <button
                         onClick={nextTestimonial}
                         disabled={isAnimating || !canGoNext}
+                        aria-label="Next testimonial"
                         className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                         <ChevronRight className="w-6 h-6 text-gray-600" />

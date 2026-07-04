@@ -104,6 +104,13 @@ export default function FaqSection() {
                                         <AccordionContent className="text-gray-700 px-4 pb-4">
                                             {item.answer}
                                         </AccordionContent>
+                                        {/* Radix unmounts AccordionContent while collapsed, so on first
+                                            load (nothing open) the answer text is absent from the
+                                            server-rendered HTML. This keeps every answer crawlable
+                                            without touching the interactive accordion's open/close logic. */}
+                                        {!isOpen && (
+                                            <p className="sr-only">{item.answer}</p>
+                                        )}
                                     </AccordionItem>
                                 );
                             })}

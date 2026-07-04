@@ -51,10 +51,10 @@ export default function Footer() {
                         </p>
 
                         <div className="flex space-x-4 text-white">
-                            <Link href="/"><Facebook className="w-5 h-5 hover:text-orange-600 transition-colors" /></Link>
-                            <Link href="/"><Twitter className="w-5 h-5 hover:text-orange-600 transition-colors" /></Link>
-                            <Link href="/"><Linkedin className="w-5 h-5 hover:text-orange-600 transition-colors" /></Link>
-                            <Link href="/"><Youtube className="w-5 h-5 hover:text-orange-600 transition-colors" /></Link>
+                            <Link href="/" aria-label="Furnishings on Facebook"><Facebook className="w-5 h-5 hover:text-orange-600 transition-colors" /></Link>
+                            <Link href="/" aria-label="Furnishings on Twitter"><Twitter className="w-5 h-5 hover:text-orange-600 transition-colors" /></Link>
+                            <Link href="/" aria-label="Furnishings on LinkedIn"><Linkedin className="w-5 h-5 hover:text-orange-600 transition-colors" /></Link>
+                            <Link href="/" aria-label="Furnishings on YouTube"><Youtube className="w-5 h-5 hover:text-orange-600 transition-colors" /></Link>
                         </div>
 
                         <button
@@ -71,8 +71,10 @@ export default function Footer() {
                         <ul className="space-y-2 sm:space-y-3 text-gray-300 text-sm sm:text-base">
                             <li><Link href="/about-us" className="hover:text-orange-600 transition-colors block py-1">About Us</Link></li>
                             <li><Link href="/contact" className="hover:text-orange-600 transition-colors block py-1">Contact Us</Link></li>
-                            <li><Link href="/terms-&-conditions" className="hover:text-orange-600 transition-colors block py-1">Terms & Conditions</Link></li>
+                            <li><Link href="/terms-and-conditions" className="hover:text-orange-600 transition-colors block py-1">Terms & Conditions</Link></li>
                             <li><Link href="/return-and-refunds-policy" className="hover:text-orange-600 transition-colors block py-1">Return and Refunds Policy</Link></li>
+                            <li><Link href="/privacy-policy" className="hover:text-orange-600 transition-colors block py-1">Privacy Policy</Link></li>
+                            <li><Link href="/cookie-policy" className="hover:text-orange-600 transition-colors block py-1">Cookie Policy</Link></li>
                         </ul>
                     </div>
 

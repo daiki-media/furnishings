@@ -157,6 +157,7 @@ export default function CategoryPage({
                     <button
                         onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                         disabled={currentPage === 1}
+                        aria-label="Previous page"
                         className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                             currentPage === 1
                                 ? 'text-gray-400 cursor-not-allowed'
@@ -188,6 +189,7 @@ export default function CategoryPage({
                     <button
                         onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                         disabled={currentPage === totalPages}
+                        aria-label="Next page"
                         className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                             currentPage === totalPages
                                 ? 'text-gray-400 cursor-not-allowed'
@@ -307,6 +309,7 @@ export default function CategoryPage({
                                             {brand}
                                             <button
                                                 onClick={() => handleBrandFilter(brand)}
+                                                aria-label={`Remove ${brand} filter`}
                                                 className="ml-2 text-orange-600 hover:text-orange-800 font-bold"
                                             >
                                                 ×
@@ -318,6 +321,7 @@ export default function CategoryPage({
                                             {range}
                                             <button
                                                 onClick={() => handlePriceRangeFilter(range)}
+                                                aria-label={`Remove ${range} filter`}
                                                 className="ml-2 text-blue-600 hover:text-blue-800 font-bold"
                                             >
                                                 ×

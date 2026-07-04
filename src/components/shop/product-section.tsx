@@ -17,6 +17,10 @@ interface ProductsSectionProps {
     // Data fetched on the server (cached) and passed in as props.
     initialProducts?: Product[];
     initialCategories?: Category[];
+    // True when the server-side product fetch itself failed (CMS down/error),
+    // as opposed to it succeeding with a genuinely empty catalogue — lets the
+    // empty state below tell users which situation they're looking at.
+    fetchFailed?: boolean;
 }
 
 // Custom hook for debouncing
@@ -43,6 +47,7 @@ function ProductsSectionContent({
     itemsPerPage = 12,
     initialProducts = [],
     initialCategories = [],
+    fetchFailed = false,
 }: ProductsSectionProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -256,13 +261,21 @@ function ProductsSectionContent({
 
                         {products.length === 0 ? (
                             <div className="text-center py-12">
-                                <p className="text-gray-500 text-lg mb-4">No products found.</p>
-                                <Link
-                                    href="/shop"
-                                    className="text-orange-600 hover:text-orange-700 font-medium"
-                                >
-                                    Browse all products
-                                </Link>
+                                {fetchFailed ? (
+                                    <p className="text-gray-500 text-lg mb-4">
+                                        We&apos;re having trouble loading products right now. Please try again shortly.
+                                    </p>
+                                ) : (
+                                    <>
+                                        <p className="text-gray-500 text-lg mb-4">No products found.</p>
+                                        <Link
+                                            href="/shop"
+                                            className="text-orange-600 hover:text-orange-700 font-medium"
+                                        >
+                                            Browse all products
+                                        </Link>
+                                    </>
+                                )}
                             </div>
                         ) : (
                             <>

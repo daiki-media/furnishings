@@ -2,9 +2,10 @@ import { MetadataRoute } from 'next';
 import { getCategories, getProducts, getBlogs } from '@/lib/api';
 import { Category, Product, Blog, BlogResponse } from '@/lib/interfaces';
 
-// Force dynamic generation
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// ISR: regenerate at most once an hour instead of on every crawler request,
+// so a slow/unreachable CMS can't make the sitemap fail or serve only the
+// static-page fallback in the middle of a crawl.
+export const revalidate = 3600;
 
 const baseUrl = 'https://www.furnishings.com.my';
 
@@ -15,6 +16,8 @@ const staticPages = [
     { url: '/blog', priority: 0.7 },
     { url: '/return-and-refunds-policy', priority: 0.5 },
     { url: '/terms-and-conditions', priority: 0.5 },
+    { url: '/privacy-policy', priority: 0.5 },
+    { url: '/cookie-policy', priority: 0.5 },
 ];
 
 function cleanUrl(url: string): string {

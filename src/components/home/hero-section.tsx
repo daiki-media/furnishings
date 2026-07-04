@@ -6,17 +6,16 @@ import Image from 'next/image';
 
 const slides = [
     {
-        title: 'Vinyl Sheet',
+        title: 'Vinyl Sheet Flooring',
         subtitle: 'New Products',
         description:
-            'Transform your space with premium carpet tiles designed for modern living. Quality and style combined.',
+            'Transform your space with premium vinyl sheet flooring designed for modern living. Quality and style combined.',
         image: '/carpet-tile.jpg',
     },
     {
-        title: 'Vinyl Sheet',
         subtitle: 'Trending Now',
         description:
-            'Buy premium synthetic grass in Malaysia – durable, low-maintenance, and perfect for homes, offices, and outdoor spaces.',
+            'Buy premium vinyl flooring in Malaysia – durable, low-maintenance, and perfect for homes, offices, and commercial spaces.',
         image: '/sofa.jpg',
     },
 ];
@@ -82,28 +81,33 @@ export default function HeroBanner() {
                 <div className="absolute inset-0 bg-black bg-opacity-70" />
                 <div className="container mx-auto px-6 py-20 relative z-10">
                     <div className="text-center space-y-8">
-                        <h2 className="text-5xl font-semibold text-white leading-tight">
+                        <h1 className="text-5xl font-semibold text-white leading-tight">
                             Transform your space with{' '}
                             <span className="text-orange-500 relative">
                                 {slides[currentSlide].title.toLowerCase()}
                             </span>
-                        </h2>
+                        </h1>
 
                         <p className="text-2xl text-white/90 max-w-2xl mx-auto leading-relaxed z-100">
                             {slides[currentSlide].description}
                         </p>
                         <div className="pt-4">
-                            <button className="bg-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
-                                <Link href="/shop">Shop Now</Link>
-                            </button>
+                            <Link
+                                href="/shop"
+                                className="inline-block bg-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                            >
+                                Shop Now
+                            </Link>
                         </div>
                     </div>
 
                     <div className="flex justify-center space-x-3 mt-12">
-                        {slides.map((_, index) => (
+                        {slides.map((slide, index) => (
                             <button
                                 key={index}
                                 onClick={() => setCurrentSlide(index)}
+                                aria-label={`Show slide ${index + 1}: ${slide.title}`}
+                                aria-current={index === currentSlide}
                                 className={`h-3 rounded-full transition-all duration-200 ${index === currentSlide
                                     ? 'bg-white w-8'
                                     : 'bg-white/50 w-3 hover:bg-white'
@@ -115,12 +119,14 @@ export default function HeroBanner() {
 
                 <button
                     onClick={prevSlide}
+                    aria-label="Previous slide"
                     className="hidden lg:block absolute left-6 top-1/2 -translate-y-1/2 bg-white hover:bg-gray-50 text-gray-700 p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 z-10"
                 >
                     <ArrowLeft size={24} />
                 </button>
                 <button
                     onClick={nextSlide}
+                    aria-label="Next slide"
                     className="hidden lg:block absolute right-6 top-1/2 -translate-y-1/2 bg-white hover:bg-gray-50 text-gray-700 p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 z-10"
                 >
                     <ArrowRight size={24} />

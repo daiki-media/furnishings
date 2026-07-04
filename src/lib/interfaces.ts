@@ -165,6 +165,20 @@ export function getBlogImageUrl(imagePath?: string): string {
     return `${API_BASE}/storage/${cleanPath}`;
 }
 
+// The CMS stores blog excerpt/content as Quill-generated HTML, so plain-text
+// previews (archive cards, meta descriptions) need tags stripped first or the
+// raw markup leaks into the visible/crawlable text.
+export function getBlogPreviewText(html?: string, maxLength = 160): string {
+    if (!html) return '';
+    const text = html
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    if (text.length <= maxLength) return text;
+    return `${text.slice(0, maxLength).trimEnd()}...`;
+}
+
 export function getProductDisplayPrice(product: Product): number {
     if (product.retail_price) {
         return typeof product.retail_price === 'string' 

@@ -5,7 +5,7 @@ export const metadata: Metadata = {
     title: "Terms & Conditions | Furnishing Online Flooring Store Malaysia",
     description: "Review the terms and conditions for shopping with Furnishing in Malaysia. Learn about orders, payments, warranties and website usage for our flooring products and services.",
     alternates: {
-        canonical: "https://www.furnishings.com.my/terms-&-conditions",
+        canonical: "https://www.furnishings.com.my/terms-and-conditions",
     },
 };
 

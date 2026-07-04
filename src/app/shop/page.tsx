@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import PageHeader from "@/components/common/header";
 import ProductsSection from "@/components/shop/product-section";
-import { getCategories, getProducts } from "@/lib/api";
+import { getCategories, getProducts, getProductsStatus } from "@/lib/api";
 
 export const metadata: Metadata = {
     title: "Shop Vinyl, SPC, Laminate & Carpet Tiles Online in Malaysia | Furnishing",
@@ -27,9 +27,10 @@ export default async function Shop({ searchParams }: ShopPageProps) {
 
     // Fetch on the server (cached via the centralized API) and pass to the
     // client filter UI as props — no client-side /api/products request.
-    const [initialProducts, initialCategories] = await Promise.all([
+    const [initialProducts, initialCategories, productsStatus] = await Promise.all([
         getProducts(),
         getCategories(),
+        getProductsStatus(),
     ]);
 
     return (
@@ -43,6 +44,7 @@ export default async function Shop({ searchParams }: ShopPageProps) {
                 itemsPerPage={12}
                 initialProducts={initialProducts}
                 initialCategories={initialCategories}
+                fetchFailed={productsStatus.failed}
             />
         </main>
     );

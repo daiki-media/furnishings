@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { Blog } from "./interfaces";
 
 const API_BASE = "https://cms.furnishings.daikimedia.com/api";
 
@@ -59,7 +60,12 @@ async function fetchWithRetry(url: string, options: RequestInit = {}, retries = 
 // same-origin, served with the Cache-Control headers from next.config.ts, so
 // repeat page views hit the browser/CDN cache instead of re-downloading the
 // full payload from the CMS on every visit.
-const fetchProducts = async () => {
+//
+// Returns `failed: true` when the CMS request itself broke (network error,
+// non-2xx, bad payload) as opposed to the CMS legitimately reporting zero
+// products, so callers can tell "temporarily unavailable" from "no products"
+// instead of rendering both as a bare empty state.
+const fetchProductsWithStatus = async (): Promise<{ data: any[]; failed: boolean }> => {
   try {
     const isBrowser = typeof window !== "undefined";
     const res = await fetchWithRetry(
@@ -67,13 +73,17 @@ const fetchProducts = async () => {
       isBrowser ? {} : { next: { revalidate: 1800 } }
     );
 
-    if (!res) return [];
+    if (!res) return { data: [], failed: true };
 
     const data = await res.json();
-    return data.success ? data.data : [];
+    if (!data.success) {
+      console.error("Products API responded without success:", data);
+      return { data: [], failed: true };
+    }
+    return { data: data.data, failed: false };
   } catch (error) {
     console.error("Failed to fetch products:", error);
-    return [];
+    return { data: [], failed: true };
   }
 };
 
@@ -81,43 +91,70 @@ const fetchProducts = async () => {
 // their own useEffect, and React's cache() only dedupes during a server render.
 // Without this, /api/products (a large payload) is downloaded multiple times per
 // page load. Caching the in-flight promise per browser session fixes that.
-let clientProductsPromise: ReturnType<typeof fetchProducts> | null = null;
+let clientProductsPromise: ReturnType<typeof fetchProductsWithStatus> | null = null;
 
-export const getProducts = cache(async () => {
+const getProductsWithStatus = cache(async () => {
   if (typeof window !== "undefined") {
     if (!clientProductsPromise) {
-      clientProductsPromise = fetchProducts().catch((error) => {
+      clientProductsPromise = fetchProductsWithStatus().catch((error) => {
         clientProductsPromise = null; // allow retry on failure
         throw error;
       });
     }
     return clientProductsPromise;
   }
-  return fetchProducts();
+  return fetchProductsWithStatus();
+});
+
+export const getProducts = cache(async () => {
+  const { data } = await getProductsWithStatus();
+  return data;
+});
+
+// For pages that need to distinguish a broken CMS request from a genuinely
+// empty catalogue (e.g. the shop page showing "0 of 0 products").
+export const getProductsStatus = cache(async () => {
+  const { data, failed } = await getProductsWithStatus();
+  return { count: data.length, failed };
 });
 
 export const getProductBySlug = cache(async (slug: string) => {
+  const normalizedSlug = slug.toLowerCase().trim();
+
   try {
+    // Reuse the already-fetched (and cache()-deduped within this render)
+    // product catalog first. This is also a correctness fix: the CMS's
+    // `?slug=` query has been observed to ignore the filter and return the
+    // full, unfiltered catalog (same byte size as /api/products), which
+    // made the old `data.data[0]` fallback silently return whichever
+    // product happened to be first in the catalog for every slug.
+    const products = await getProducts();
+    const found = products.find(
+      (p: any) => p.slug?.toLowerCase().trim() === normalizedSlug
+    );
+    if (found) return found;
+
+    // Fallback for a product that isn't in the general list yet (e.g. just
+    // published, ahead of that cache's revalidation). Search the response
+    // by slug rather than trusting data.data[0], since the endpoint may
+    // return the whole catalog regardless of the query.
     const res = await fetchWithRetry(`${API_BASE}/products?slug=${slug}`, {
       next: { revalidate: 1800 },
     });
 
     if (res) {
       const data = await res.json();
-      if (data.success && data.data?.length) {
-        return data.data[0];
+      if (data.success && Array.isArray(data.data)) {
+        const match = data.data.find(
+          (p: any) => p.slug?.toLowerCase().trim() === normalizedSlug
+        );
+        if (match) return match;
+        // Only trust a single-item response as an actual filter match.
+        if (data.data.length === 1) return data.data[0];
       }
     }
 
-    // fallback
-    const products = await getProducts();
-    const normalizedSlug = slug.toLowerCase().trim();
-
-    return (
-      products.find(
-        (p: any) => p.slug?.toLowerCase().trim() === normalizedSlug
-      ) || null
-    );
+    return null;
   } catch (error) {
     console.error("Failed to fetch product by slug:", error);
     return null;
@@ -161,6 +198,18 @@ export const getCategories = cache(async () => {
 });
 
 
+// Stable sort so pagination (archive pages, /blog/page/[n]) always slices the
+// same order. Without this, posts can shift position between requests and a
+// page can end up empty while another post is skipped entirely.
+function sortBlogsStable(blogs: Blog[]): Blog[] {
+  return [...blogs].sort((a, b) => {
+    const dateA = new Date(a.publish_date || a.created_at || 0).getTime() || 0;
+    const dateB = new Date(b.publish_date || b.created_at || 0).getTime() || 0;
+    if (dateB !== dateA) return dateB - dateA;
+    return (b.id || 0) - (a.id || 0);
+  });
+}
+
 export const getBlogs = cache(async () => {
   try {
     const res = await fetchWithRetry(`${API_BASE}/blogs/all-blogs`, {
@@ -178,25 +227,27 @@ export const getBlogs = cache(async () => {
     const data = await res.json();
 
     if (Array.isArray(data)) {
+      const sorted = sortBlogsStable(data);
       return {
         success: true,
-        data,
+        data: sorted,
         meta: {
           currentPage: 1,
           totalPages: 1,
-          totalItems: data.length,
+          totalItems: sorted.length,
         },
       };
     }
 
     if (data?.data && Array.isArray(data.data)) {
+      const sorted = sortBlogsStable(data.data);
       return {
         success: true,
-        data: data.data,
+        data: sorted,
         meta: data.meta || {
           currentPage: 1,
           totalPages: 1,
-          totalItems: data.data.length,
+          totalItems: sorted.length,
         },
       };
     }

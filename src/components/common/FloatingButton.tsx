@@ -28,6 +28,7 @@ const FloatingButton = () => {
                 rel="noopener noreferrer"
                 className="flex items-center justify-center w-14 h-14 rounded-full bg-green-500 shadow-lg hover:bg-green-600 transition duration-300 relative"
                 title="Click to open WhatsApp and send the message"
+                aria-label="Chat with us on WhatsApp"
             >
                 <FaWhatsapp className="w-7 h-7 text-white" />
             </Link>

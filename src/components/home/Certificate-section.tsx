@@ -112,6 +112,7 @@ const CertificateCarousel = () => {
                     <button
                         onClick={scrollLeft}
                         disabled={!canScrollLeft}
+                        aria-label="Scroll certifications left"
                         className={`absolute left-0 top-1/2 transform -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center transition-all duration-300 ${canScrollLeft
                             ? 'text-gray-700 hover:bg-gray-50 hover:shadow-xl cursor-pointer'
                             : 'text-gray-300 cursor-not-allowed'
@@ -123,6 +124,7 @@ const CertificateCarousel = () => {
                     <button
                         onClick={scrollRight}
                         disabled={!canScrollRight}
+                        aria-label="Scroll certifications right"
                         className={`absolute right-0 top-1/2 transform -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center transition-all duration-300 ${canScrollRight
                             ? 'text-gray-700 hover:bg-gray-50 hover:shadow-xl cursor-pointer'
                             : 'text-gray-300 cursor-not-allowed'

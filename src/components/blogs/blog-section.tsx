@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import PaginationLink from '@/components/common/pagination-link';
 import { getBlogs } from '@/lib/api';
-import { Blog, getBlogImageUrl } from '@/lib/interfaces';
+import { Blog, getBlogImageUrl, getBlogPreviewText } from '@/lib/interfaces';
 
 interface BlogListProps {
   limit?: number;
@@ -160,7 +160,7 @@ export default async function BlogList({
                     </h3>
 
                     <p className="text-base text-gray-600 mb-4 leading-relaxed line-clamp-3">
-                      {blog.excerpt || blog.content?.substring(0, 150) || ''}
+                      {getBlogPreviewText(blog.excerpt) || getBlogPreviewText(blog.content)}
                     </p>
 
                     <div className="mt-auto">

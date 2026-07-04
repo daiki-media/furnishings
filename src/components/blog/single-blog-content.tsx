@@ -16,6 +16,18 @@ interface BlogPost {
     category_name?: string;
 }
 
+// The CMS currently stores a literal placeholder ("mrs. X" / "mr. X") as the
+// author on most posts. Showing that verbatim reads as a fake credential, so
+// fall back to an honest, generic byline until the CMS is given a real
+// author/editorial-reviewer entity.
+function displayAuthor(author: string): string {
+    const normalized = author?.trim().toLowerCase();
+    if (!normalized || normalized === 'mrs. x' || normalized === 'mr. x') {
+        return 'Furnishings Editorial Team';
+    }
+    return author;
+}
+
 export default function SingleBlogContent({ blog }: { blog: BlogPost }) {
     const processContent = (content: string): string => {
         const baseUrl = 'https://cms.furnishings.daikimedia.com';
@@ -49,7 +61,7 @@ export default function SingleBlogContent({ blog }: { blog: BlogPost }) {
             <section className="py-12 px-6">
                 <div className="container mx-auto max-w-4xl">
                     <p className="text-gray-500 mb-6">
-                        By {blog.author} | {new Date(blog.publish_date).toDateString()}
+                        By {displayAuthor(blog.author)} | {new Date(blog.publish_date).toDateString()}
                     </p>
 
                     <div className="relative h-96 w-full mb-8">
@@ -61,8 +73,6 @@ export default function SingleBlogContent({ blog }: { blog: BlogPost }) {
                             priority
                         />
                     </div>
-
-                    <p className="text-lg text-gray-700 mb-8">{blog.excerpt}</p>
 
                     <div
                         className="prose prose-lg max-w-none"
