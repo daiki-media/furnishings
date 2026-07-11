@@ -99,8 +99,6 @@ async function ProductContent({
     },
   };
 
-  // Compute related products on the cached server (same category first,
-  // then fall back to any other products) instead of fetching on the client.
   const allProducts: Product[] = (await getProducts()) || [];
   let relatedProducts = allProducts
     .filter((p) => p.category?.slug === canonicalCategory && p.id !== productData.id)
@@ -109,11 +107,64 @@ async function ProductContent({
     relatedProducts = allProducts.filter((p) => p.id !== productData.id).slice(0, 4);
   }
 
+  const canonicalUrl = `https://www.furnishings.com.my/shop/${canonicalCategory}/${productData.slug}`;
+  const imageUrl = productWithFullUrls.images.main_image;
+  const price = productData.retail_price || productData.purchase_price || 0;
+
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "@id": `${canonicalUrl}#product`,
+    name: productData.name,
+    description: productData.description?.short || productData.description?.long || "",
+    image: imageUrl,
+    sku: productData.sku,
+    brand: {
+      "@type": "Brand",
+      name: productData.brand,
+    },
+    category: productData.category?.name || "Flooring",
+    ...(price > 0 ? {
+      offers: {
+        "@type": "Offer",
+        url: canonicalUrl,
+        priceCurrency: "MYR",
+        price: typeof price === "string" ? parseFloat(price) : price,
+        availability: "https://schema.org/InStock",
+        seller: {
+          "@type": "Organization",
+          name: "Furnishing Solutions",
+        },
+      },
+    } : {}),
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.furnishings.com.my" },
+      { "@type": "ListItem", position: 2, name: "Shop", item: "https://www.furnishings.com.my/shop" },
+      { "@type": "ListItem", position: 3, name: productData.category?.name || "Products", item: `https://www.furnishings.com.my/category/${canonicalCategory}` },
+      { "@type": "ListItem", position: 4, name: productData.name, item: canonicalUrl },
+    ],
+  };
+
   return (
-    <SingleProduct
-      productData={productWithFullUrls}
-      relatedProducts={relatedProducts}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <SingleProduct
+        productData={productWithFullUrls}
+        relatedProducts={relatedProducts}
+      />
+    </>
   );
 }
 

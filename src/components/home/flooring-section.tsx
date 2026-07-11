@@ -1,79 +1,99 @@
-import { CloudRainWind, Layers, Sprout, LayoutDashboard, Home, RulerDimensionLine } from "lucide-react";
-
+import { CloudRainWind, Layers, Sprout, LayoutDashboard, Home, RulerDimensionLine, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import Reveal from "@/components/common/reveal";
+import SectionHeading from "@/components/home/section-heading";
 
 interface FlooringItem {
     title: string;
     description: string;
     icon: React.ReactNode;
+    href: string;
+    cta: string;
 }
 
 const flooringItems: FlooringItem[] = [
     {
-        title: "Laminate Flooring Malaysia",
+        title: "Laminate Flooring",
         description:
-            "Upgrade your space with high gloss laminates Malaysia or wooden laminates Malaysia. Our laminate wood flooring is durable and affordable, perfect for residential and commercial use.",
-        icon: <CloudRainWind size={24} className="text-white" />,
+            "Warm, wood-look laminate that's hard-wearing and budget-friendly — a natural fit for living rooms, bedrooms and busy family homes.",
+        icon: <CloudRainWind size={22} />,
+        href: "/shop",
+        cta: "Shop laminate",
     },
     {
-        title: "Vinyl Flooring Malaysia",
+        title: "Vinyl Flooring",
         description:
-            "Choose from vinyl floor tiles Malaysia, vinyl sheet flooring Malaysia, or buy vinyl flooring Malaysia in rolls. Our waterproof kitchen vinyl flooring and bathroom waterproof vinyl flooring are ideal for any home.",
-        icon: <Layers size={24} className="text-white" />,
+            "Waterproof vinyl planks, tiles and sheets that shrug off spills and humidity — ideal for kitchens, bathrooms and wet areas across Malaysia.",
+        icon: <Layers size={22} />,
+        href: "/shop",
+        cta: "Shop vinyl",
     },
     {
-        title: "Synthetic Grass Malaysia",
+        title: "Synthetic Grass",
         description:
-            "Enhance your outdoor space with artificial grass Malaysia or outdoor artificial turf. Perfect for fake grass installation Malaysia or artificial grass for balcony areas.",
-        icon: <Sprout size={24} className="text-white" />,
+            "Low-maintenance artificial grass that stays green all year — perfect for balconies, patios and outdoor play areas without the upkeep.",
+        icon: <Sprout size={22} />,
+        href: "/shop",
+        cta: "Explore turf",
     },
     {
-        title: "Carpet Store Malaysia",
+        title: "Carpet & Carpet Tiles",
         description:
-            "Visit our carpet store Malaysia for office carpet Malaysia, carpet tiles Malaysia, or buy carpets online Malaysia. Explore cheap carpet tiles Malaysia and office carpet tiles for your space.",
-        icon: <LayoutDashboard size={24} className="text-white" />,
+            "Comfortable, acoustic carpet tiles for offices and commercial spaces — easy to install, easy to replace, and available online or in-store.",
+        icon: <LayoutDashboard size={22} />,
+        href: "/shop",
+        cta: "Shop carpet tiles",
     },
     {
-        title: "Home Flooring Solutions Malaysia",
+        title: "Commercial Flooring",
         description:
-            "From vinyl sheet flooring for office to commercial vinyl sheet flooring Malaysia, we offer the best vinyl floor supplier in Malaysia. Check out homogeneous vinyl flooring Malaysia and wooden flooring Malaysia.",
-        icon: <Home size={24} className="text-white" />,
+            "Durable, high-traffic flooring for offices, retail and clinics — with volume pricing and nationwide installation for larger projects.",
+        icon: <Home size={22} />,
+        href: "/contact",
+        cta: "Request a project quote",
     },
     {
-        title: "Interior Design Malaysia",
+        title: "Advice & Inspiration",
         description:
-            "Collaborate with vinyl sheet supplier Malaysia for home decor Malaysia. Find affordable vinyl sheet flooring Malaysia and carpet tile supplier Malaysia for your interior design projects.",
-        icon: <RulerDimensionLine size={24} className="text-white" />,
+            "Not sure where to start? Browse our journal for design ideas, care tips and guides on choosing the right flooring for your space.",
+        icon: <RulerDimensionLine size={22} />,
+        href: "/blog",
+        cta: "Read the journal",
     },
 ];
 
 const FlooringSection = () => {
     return (
-        <section className="py-12">
-            <div className="container mx-auto px-4 text-left">
-                <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">
-                    Explore Flooring Solutions in Malaysia
-                </h2>
-                <p className="text-lg text-gray-600 mb-10 text-center">
-                    Discover the best home flooring solutions Malaysia has to offer, including laminate flooring Malaysia, vinyl flooring Malaysia, and more. Whether you&apos;re looking for waterproof Vinyl Flooring Roll Supplier in Malaysia, affordable laminate flooring, or artificial grass Malaysia, we’ve got you covered!
-                </p>
+        <section className="py-24 md:py-32 bg-white">
+            <div className="container mx-auto px-6">
+                <SectionHeading
+                    eyebrow="Explore by Need"
+                    title="Flooring solutions for every space"
+                    subtitle="From waterproof vinyl and warm laminate to artificial grass and commercial carpet tiles — find the right surface for your home or business in Malaysia."
+                />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-16">
                     {flooringItems.map((item, index) => (
-                        <div
-                            key={index}
-                            className="bg-white p-6 rounded-lg border border-orange-200 shadow-md"
-                        >
-                            <div className="w-12 h-12 bg-orange-600 rounded-lg flex items-center justify-center mb-4">
-                                {item.icon}
-                            </div>
-                            <h3 className="text-xl font-semibold text-black mb-3">{item.title}</h3>
-                            <p className="text-gray-600 text-justify mb-4">{item.description}</p>
-                        </div>
+                        <Reveal key={index} delay={index * 0.06} className="h-full">
+                            <Link
+                                href={item.href}
+                                className="group h-full flex flex-col bg-cream p-7 rounded-2xl border border-zinc-100 hover:border-orange-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+                            >
+                                <div className="w-12 h-12 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center mb-5">
+                                    {item.icon}
+                                </div>
+                                <h3 className="font-display text-xl font-medium text-charcoal mb-3">{item.title}</h3>
+                                <p className="text-zinc-600 leading-relaxed">{item.description}</p>
+                                <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-orange-600 group-hover:gap-3 transition-all">
+                                    {item.cta}
+                                    <ArrowRight className="w-4 h-4" />
+                                </span>
+                            </Link>
+                        </Reveal>
                     ))}
                 </div>
             </div>
         </section>
-
     );
 };
 

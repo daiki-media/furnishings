@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Facebook, Twitter, Linkedin, Youtube, ArrowUp } from "lucide-react";
 import { getCategories } from '@/lib/api';
+import Logo from '@/components/common/logo';
 
 interface Category {
     id: number;
@@ -44,9 +45,9 @@ export default function Footer() {
             <div className="relative container mx-auto px-4 sm:px-6 lg:px-16 py-8 sm:py-12">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[3.3fr_1fr_1fr] gap-8 lg:gap-12">
                     <div className="space-y-4 sm:space-y-6 md:col-span-2 lg:col-span-1 lg:pr-16">
-                        <h4 className="text-lg sm:text-xl font-bold tracking-tight text-orange-600">ABOUT US</h4>
-                        <p className="text-gray-300 leading-relaxed text-sm sm:text-base text-justify">
-                            From supply to professional installation, Furnishing is your one-stop destination
+                        <Logo variant="light" />
+                        <p className="text-gray-300 leading-relaxed text-sm sm:text-base">
+                            From supply to professional installation, Furnishing Solutions is your one-stop destination
                             for innovative, lasting, and visually striking interior solutions.
                         </p>
 

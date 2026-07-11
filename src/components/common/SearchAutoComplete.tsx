@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { getProducts } from '@/lib/api';
-import { Product } from '@/lib/interfaces';
 
 // Create a simpler type for search results
 interface SearchProduct {
@@ -159,7 +158,7 @@ const SearchAutoComplete: React.FC = () => {
                     onFocus={handleInputFocus}
                     onKeyDown={handleKeyDown}
                     placeholder="Search for flooring..."
-                    className="w-full px-4 py-3 pr-20 text-gray-700 bg-white border border-orange-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
+                    className="w-full px-4 py-2.5 pr-11 text-sm text-charcoal bg-cream border border-zinc-200 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-400 focus:bg-white transition-all duration-200"
                     aria-label="Search products"
                     autoComplete="off"
                 />
@@ -191,19 +190,19 @@ const SearchAutoComplete: React.FC = () => {
             )}
 
             {showDropdown && suggestions.length > 0 && (
-                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                <div className="absolute z-50 w-full mt-2 bg-white border border-zinc-100 rounded-2xl shadow-xl max-h-64 overflow-y-auto">
                     {suggestions.map((product, index) => (
                         <button
                             key={product.id || product.slug}
                             onClick={() => handleSuggestionSelect(product)}
-                            className={`w-full px-4 py-3 text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors duration-150 ${
-                                index === selectedIndex ? 'bg-orange-50 text-orange-700' : 'text-gray-700'
-                            } ${index === 0 ? 'rounded-t-lg' : ''} ${
-                                index === suggestions.length - 1 ? 'rounded-b-lg' : 'border-b border-gray-100'
+                            className={`w-full px-4 py-3 text-left hover:bg-cream focus:bg-cream focus:outline-none transition-colors duration-150 ${
+                                index === selectedIndex ? 'bg-orange-50 text-orange-700' : 'text-zinc-700'
+                            } ${index === 0 ? 'rounded-t-2xl' : ''} ${
+                                index === suggestions.length - 1 ? 'rounded-b-2xl' : 'border-b border-zinc-100'
                             }`}
                         >
                             <div className="flex items-center">
-                                <Search className="w-4 h-4 mr-3 text-gray-400 flex-shrink-0" />
+                                <Search className="w-4 h-4 mr-3 text-zinc-400 flex-shrink-0" />
                                 <span className="truncate">{product.name}</span>
                             </div>
                         </button>

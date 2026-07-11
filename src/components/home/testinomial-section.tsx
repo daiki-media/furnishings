@@ -1,14 +1,15 @@
 "use client";
-import React, { useState } from "react";
+import { useState } from "react";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
+import SectionHeading from "@/components/home/section-heading";
 
 const TestimonialsSection = () => {
     const testimonials = [
         {
             id: 1,
             name: "Teresa Whiting",
-            date: "2025-06-18",
+            location: "Kuala Lumpur",
             rating: 4,
             text: "Amazing service and quality work. The team was professional and delivered exactly what we needed",
             avatar: "T",
@@ -17,7 +18,7 @@ const TestimonialsSection = () => {
         {
             id: 4,
             name: "Nur Hanis",
-            date: "2025-06-18",
+            location: "Selangor",
             rating: 4,
             text: "Our kitchen vinyl floor survived multiple floods—no damage, no peeling. Furnishing Solutions did an excellent job with installation and customer service.",
             avatar: "N",
@@ -26,7 +27,7 @@ const TestimonialsSection = () => {
         {
             id: 5,
             name: "Imran Rafiq",
-            date: "2025-06-18",
+            location: "Penang",
             rating: 5,
             text: "Stylish and easy to maintain. Our café looks great and still looks brand new after a year of daily use. Highly recommend their flooring solutions.",
             avatar: "I",
@@ -35,7 +36,7 @@ const TestimonialsSection = () => {
         {
             id: 6,
             name: "Sarah Ahmed",
-            date: "2025-06-17",
+            location: "Johor Bahru",
             rating: 4,
             text: "Outstanding service from start to finish. The team was punctual, professional, and the quality exceeded our expectations.",
             avatar: "S",
@@ -67,14 +68,15 @@ const TestimonialsSection = () => {
     };
 
     return (
-        <div className="py-16 ">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-12">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                        Client Testimonials
-                    </h2>
-                </div>
-                <div className="relative container mx-auto">
+        <div className="py-24 md:py-32 bg-charcoal">
+            <div className="container mx-auto px-6">
+                <SectionHeading
+                    invert
+                    eyebrow="Testimonials"
+                    title="What our clients say"
+                    subtitle="Real feedback from Malaysian homeowners and businesses we've worked with."
+                />
+                <div className="relative container mx-auto mt-16">
                     <button
                         onClick={prevTestimonial}
                         disabled={isAnimating || !canGoPrev}
@@ -102,7 +104,7 @@ const TestimonialsSection = () => {
                             {testimonials.map((testimonial,) => (
                                 <div
                                     key={testimonial.id}
-                                    className="bg-white rounded-xl shadow-md  transition-all duration-300 p-6 border border-orange-500"
+                                    className="bg-white/[0.06] backdrop-blur-sm rounded-2xl hover:bg-white/[0.1] transition-all duration-300 p-6 border border-white/10"
                                     style={{ width: `${100 / testimonials.length}%`, minWidth: '300px' }}
                                 >
                                     <div className="flex items-center justify-between mb-4">
@@ -111,8 +113,8 @@ const TestimonialsSection = () => {
                                                 {testimonial.avatar}
                                             </div>
                                             <div>
-                                                <h3 className="font-semibold text-gray-900">{testimonial.name}</h3>
-                                                <p className="text-sm text-gray-500">{testimonial.date}</p>
+                                                <h3 className="font-semibold text-white">{testimonial.name}</h3>
+                                                <p className="text-sm text-white/50">{testimonial.location}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-1">
@@ -131,8 +133,8 @@ const TestimonialsSection = () => {
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="text-gray-700 leading-relaxed">
-                                        <p className="text-sm text-justify">{testimonial.text}</p>
+                                    <div className="text-white/80 leading-relaxed">
+                                        <p className="text-sm leading-relaxed">{testimonial.text}</p>
                                     </div>
                                 </div>
                             ))}

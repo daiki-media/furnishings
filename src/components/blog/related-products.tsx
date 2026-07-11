@@ -1,7 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
+import { ArrowRight } from "lucide-react";
 import { getProducts } from "@/lib/api";
-import { Product, getFullImageUrl } from "@/lib/interfaces";
+import { Product, getFullImageUrl, formatPrice } from "@/lib/interfaces";
+import SectionHeading from "@/components/home/section-heading";
 
 function shuffleArray<T>(array: T[]): T[] {
     if (!Array.isArray(array)) return [];
@@ -28,66 +30,70 @@ export default async function RelatedProducts() {
     }
 
     return (
-        <div className="py-12 px-6 bg-gray-50">
-            <div className="container mx-auto">
-                <h2 className="text-3xl font-bold mb-8 text-center">Related Products</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <section className="py-24 md:py-32 bg-cream">
+            <div className="container mx-auto px-6">
+                <SectionHeading
+                    eyebrow="Explore Our Range"
+                    title="Related products"
+                    subtitle="Discover flooring solutions that complement the ideas in this article."
+                />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-16">
                     {products.map((product) => {
                         const imageUrl = getFullImageUrl(product.images.main_image);
                         const categorySlug = product.category?.slug || 'uncategorized';
+                        const price = product.retail_price || product.purchase_price || 0;
 
                         return (
                             <Link
                                 key={product.id}
                                 href={`/shop/${categorySlug}/${product.slug}`}
-                                className="group relative overflow-hidden rounded-2xl bg-white shadow-md transition-shadow hover:shadow-xl"
+                                className="group h-full flex flex-col bg-white rounded-2xl border border-zinc-100 overflow-hidden hover:border-orange-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
                             >
-                                <div className="relative h-56 overflow-hidden bg-orange-100">
+                                <div className="relative h-56 overflow-hidden bg-cream">
                                     {imageUrl ? (
                                         <Image
                                             src={imageUrl}
                                             alt={product.name}
                                             fill
                                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                                            className="object-cover p-4 group-hover:scale-105 transition-transform duration-300"
+                                            className="object-cover p-4 group-hover:scale-105 transition-transform duration-500"
                                         />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                        <div className="w-full h-full flex items-center justify-center text-zinc-400">
                                             No Image
                                         </div>
                                     )}
                                 </div>
 
-                                <div className="p-6">
-                                    <h3 className="text-xl font-semibold mb-3 text-gray-800 group-hover:text-orange-600 transition-colors duration-300 line-clamp-2">
+                                <div className="p-6 flex-1 flex flex-col">
+                                    <h3 className="font-display text-lg font-medium text-charcoal mb-2 group-hover:text-orange-600 transition-colors line-clamp-2">
                                         {product.name}
                                     </h3>
-                                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                                    <p className="text-sm text-zinc-600 mb-4 line-clamp-2 leading-relaxed">
                                         {product.description?.short || product.description?.long || "Explore this premium flooring solution."}
                                     </p>
 
-                                    <div className="flex items-center text-orange-500 font-medium">
-                                        <span className="text-sm">View Product</span>
-                                        <svg
-                                            className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M9 5l7 7-7 7"
-                                            />
-                                        </svg>
+                                    <div className="mt-auto flex items-center justify-between">
+                                        {price > 0 && (
+                                            <span className="text-sm font-semibold text-charcoal">
+                                                {formatPrice(typeof price === 'string' ? parseFloat(price) : price)}
+                                            </span>
+                                        )}
+                                        <span className="inline-flex items-center gap-1.5 text-orange-600 font-semibold text-sm group-hover:gap-2.5 transition-all ml-auto">
+                                            View
+                                            <ArrowRight className="w-4 h-4" />
+                                        </span>
                                     </div>
                                 </div>
+
+                                {/* Bottom accent line */}
+                                <div className="h-1 bg-gradient-to-r from-orange-400 to-orange-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
                             </Link>
                         );
                     })}
                 </div>
             </div>
-        </div>
+        </section>
     );
 }

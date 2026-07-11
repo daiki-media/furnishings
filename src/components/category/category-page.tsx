@@ -1,347 +1,221 @@
-// components/category/category-page.tsx
 'use client';
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Category, Product, getFullImageUrl, getProductDisplayPrice } from "@/lib/interfaces";
+import { X, SlidersHorizontal, ArrowRight } from "lucide-react";
+import { Category, Product, getFullImageUrl, getProductDisplayPrice, formatPrice } from "@/lib/interfaces";
 
 interface CategoryPageProps {
     slug?: string;
-    // Products (already filtered to this category) and the category itself are
-    // fetched on the cached server and passed in as props.
     initialProducts?: Product[];
     initialCategory?: Category | null;
+}
+
+const PRICE_RANGES = ['Under RM50', 'RM50 - RM100', 'RM100 - RM200', 'Over RM200'] as const;
+
+function getVisiblePages(currentPage: number, totalPages: number): (number | '...')[] {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    if (currentPage <= 4) return [1, 2, 3, 4, 5, '...', totalPages];
+    if (currentPage >= totalPages - 3) return [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+}
+
+function matchesPriceRange(price: number, range: string): boolean {
+    switch (range) {
+        case 'Under RM50': return price < 50;
+        case 'RM50 - RM100': return price >= 50 && price <= 100;
+        case 'RM100 - RM200': return price > 100 && price <= 200;
+        case 'Over RM200': return price > 200;
+        default: return true;
+    }
 }
 
 export default function CategoryPage({
     initialProducts = [],
     initialCategory = null,
 }: CategoryPageProps) {
-    const categoryProducts = initialProducts;
-    const currentCategory = initialCategory;
-
     const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
     const [selectedPriceRanges, setSelectedPriceRanges] = useState<string[]>([]);
-
+    const [showMobileFilters, setShowMobileFilters] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const productsPerPage = 12;
 
-    const categoryName = currentCategory?.name;
+    const uniqueBrands = useMemo(() => {
+        const brands = new Set(
+            initialProducts
+                .map(p => p.brand?.toLowerCase())
+                .filter((brand): brand is string => Boolean(brand && brand.trim() !== ''))
+        );
+        return Array.from(brands).sort();
+    }, [initialProducts]);
 
-    // Filter products based on selected filters
     const filteredProducts = useMemo(() => {
-        let filtered = categoryProducts;
+        let filtered = initialProducts;
 
-        // Filter by brands
         if (selectedBrands.length > 0) {
             filtered = filtered.filter(product =>
                 selectedBrands.includes(product.brand?.toLowerCase())
             );
         }
 
-        // Filter by price range
         if (selectedPriceRanges.length > 0) {
             filtered = filtered.filter(product => {
                 const price = getProductDisplayPrice(product);
-                return selectedPriceRanges.some(range => {
-                    switch (range) {
-                        case 'Under RM50':
-                            return price < 50;
-                        case 'RM50 - RM100':
-                            return price >= 50 && price <= 100;
-                        case 'RM100 - RM200':
-                            return price > 100 && price <= 200;
-                        case 'Over RM200':
-                            return price > 200;
-                        default:
-                            return true;
-                    }
-                });
+                return selectedPriceRanges.some(range => matchesPriceRange(price, range));
             });
         }
 
         return filtered;
-    }, [categoryProducts, selectedBrands, selectedPriceRanges]);
-
-    // Get unique brands from products
-    const uniqueBrands = useMemo(() => {
-        const brands = new Set(
-            categoryProducts
-                .map(p => p.brand?.toLowerCase())
-                .filter((brand): brand is string => Boolean(brand && brand.trim() !== ''))
-        );
-        return Array.from(brands).sort();
-    }, [categoryProducts]);
+    }, [initialProducts, selectedBrands, selectedPriceRanges]);
 
     const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
     const startIndex = (currentPage - 1) * productsPerPage;
-    const endIndex = startIndex + productsPerPage;
-    const currentProducts = filteredProducts.slice(startIndex, endIndex);
+    const currentProducts = filteredProducts.slice(startIndex, startIndex + productsPerPage);
+    const hasActiveFilters = selectedBrands.length > 0 || selectedPriceRanges.length > 0;
 
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [selectedBrands, selectedPriceRanges]);
+    useEffect(() => { setCurrentPage(1); }, [selectedBrands, selectedPriceRanges]);
+    useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [currentPage]);
 
-    useEffect(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, [currentPage]);
+    const toggleBrand = (brand: string) =>
+        setSelectedBrands(prev => prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]);
 
-    const handlePageChange = (newPage: number) => {
-        setCurrentPage(newPage);
-    };
+    const togglePriceRange = (range: string) =>
+        setSelectedPriceRanges(prev => prev.includes(range) ? prev.filter(r => r !== range) : [...prev, range]);
 
-    const clearAllFilters = () => {
-        setSelectedBrands([]);
-        setSelectedPriceRanges([]);
-    };
+    const clearAllFilters = () => { setSelectedBrands([]); setSelectedPriceRanges([]); };
 
-    const handleBrandFilter = (brand: string) => {
-        setSelectedBrands(prev =>
-            prev.includes(brand)
-                ? prev.filter(b => b !== brand)
-                : [...prev, brand]
-        );
-    };
+    if (!initialCategory) return null;
 
-    const handlePriceRangeFilter = (range: string) => {
-        setSelectedPriceRanges(prev =>
-            prev.includes(range)
-                ? prev.filter(r => r !== range)
-                : [...prev, range]
-        );
-    };
+    const FilterContent = () => (
+        <>
+            <h2 className="font-display text-xl font-medium text-charcoal mb-6">Filters</h2>
 
-    const PaginationControls = () => {
-        if (totalPages <= 1) return null;
+            {uniqueBrands.length > 0 && (
+                <div className="mb-8">
+                    <h3 className="text-sm font-semibold text-charcoal uppercase tracking-wide mb-3">Brand</h3>
+                    <div className="space-y-2.5 max-h-60 overflow-y-auto">
+                        {uniqueBrands.map((brand) => (
+                            <label key={brand} className="flex items-center cursor-pointer group">
+                                <input
+                                    type="checkbox"
+                                    className="w-4 h-4 text-orange-600 border-zinc-300 rounded focus:ring-orange-500/40"
+                                    checked={selectedBrands.includes(brand)}
+                                    onChange={() => toggleBrand(brand)}
+                                />
+                                <span className="ml-3 text-sm text-zinc-600 group-hover:text-orange-600 capitalize transition-colors">
+                                    {brand}
+                                </span>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+            )}
 
-        const getVisiblePages = () => {
-            const visiblePages = [];
-            const maxVisiblePages = 5;
-
-            if (totalPages <= maxVisiblePages) {
-                for (let i = 1; i <= totalPages; i++) {
-                    visiblePages.push(i);
-                }
-            } else {
-                if (currentPage <= 3) {
-                    for (let i = 1; i <= 4; i++) {
-                        visiblePages.push(i);
-                    }
-                    visiblePages.push('...');
-                    visiblePages.push(totalPages);
-                } else if (currentPage >= totalPages - 2) {
-                    visiblePages.push(1);
-                    visiblePages.push('...');
-                    for (let i = totalPages - 3; i <= totalPages; i++) {
-                        visiblePages.push(i);
-                    }
-                } else {
-                    visiblePages.push(1);
-                    visiblePages.push('...');
-                    for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-                        visiblePages.push(i);
-                    }
-                    visiblePages.push('...');
-                    visiblePages.push(totalPages);
-                }
-            }
-            return visiblePages;
-        };
-
-        const visiblePages = getVisiblePages();
-
-        return (
-            <div className="flex justify-center items-center mt-8 mb-6">
-                <div className="flex items-center space-x-2 bg-white rounded-lg shadow-md p-2">
-                    <button
-                        onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                        disabled={currentPage === 1}
-                        aria-label="Previous page"
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            currentPage === 1
-                                ? 'text-gray-400 cursor-not-allowed'
-                                : 'text-gray-700 hover:bg-gray-100'
-                        }`}
-                    >
-                        &laquo;
-                    </button>
-
-                    {visiblePages.map((page, index) => (
-                        <React.Fragment key={index}>
-                            {page === '...' ? (
-                                <span className="px-3 py-2 text-gray-400">...</span>
-                            ) : (
-                                <button
-                                    onClick={() => handlePageChange(page as number)}
-                                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                        currentPage === page
-                                            ? 'bg-orange-600 text-white'
-                                            : 'text-gray-700 hover:bg-gray-100'
-                                    }`}
-                                >
-                                    {page}
-                                </button>
-                            )}
-                        </React.Fragment>
+            <div className="mb-8">
+                <h3 className="text-sm font-semibold text-charcoal uppercase tracking-wide mb-3">Price range</h3>
+                <div className="space-y-2.5">
+                    {PRICE_RANGES.map((range) => (
+                        <label key={range} className="flex items-center cursor-pointer group">
+                            <input
+                                type="checkbox"
+                                className="w-4 h-4 text-orange-600 border-zinc-300 rounded focus:ring-orange-500/40"
+                                checked={selectedPriceRanges.includes(range)}
+                                onChange={() => togglePriceRange(range)}
+                            />
+                            <span className="ml-3 text-sm text-zinc-600 group-hover:text-orange-600 transition-colors">
+                                {range}
+                            </span>
+                        </label>
                     ))}
-
-                    <button
-                        onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                        disabled={currentPage === totalPages}
-                        aria-label="Next page"
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            currentPage === totalPages
-                                ? 'text-gray-400 cursor-not-allowed'
-                                : 'text-gray-700 hover:bg-gray-100'
-                        }`}
-                    >
-                        &raquo;
-                    </button>
                 </div>
             </div>
-        );
-    };
 
-    if (!currentCategory) {
-        return null;
-    }
+            <button
+                onClick={clearAllFilters}
+                disabled={!hasActiveFilters}
+                className="w-full bg-orange-600 hover:bg-orange-500 text-white py-3 px-4 rounded-full text-sm font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+                Clear all filters
+            </button>
+        </>
+    );
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <div className="bg-white shadow-sm border-b">
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <div className="mb-4">
-                        <nav className="flex text-sm text-gray-500">
-                            <Link href="/" className="hover:text-orange-600">Home</Link>
-                            <span className="mx-2">/</span>
-                            <Link href="/category" className="hover:text-orange-600">Category</Link>
-                            <span className="mx-2">/</span>
-                            <span className="text-gray-900 font-medium">{categoryName}</span>
-                        </nav>
-                    </div>
-                    
-                    <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                        {categoryName} in Malaysia
-                    </h1>
-                    <p className="text-gray-600">
-                        {filteredProducts.length} products found
-                        {filteredProducts.length > 0 && (
-                            <span className="ml-2 text-sm">
-                                | Page {currentPage} of {totalPages}
-                            </span>
-                        )}
+        <section className="py-16 md:py-24 bg-cream">
+            <div className="container mx-auto px-6">
+
+                {/* Toolbar: count + mobile filter toggle */}
+                <div className="flex items-center justify-between mb-8">
+                    <p className="text-sm text-zinc-500">
+                        {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
+                        {totalPages > 1 && <span> · Page {currentPage} of {totalPages}</span>}
                     </p>
-                </div>
-            </div>
-
-            {/* Main Content */}
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="flex flex-col lg:flex-row gap-8">
-                    {/* Filters Sidebar */}
                     {uniqueBrands.length > 0 && (
-                        <div className="lg:w-1/4">
-                            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-24">
-                                <h2 className="text-xl font-bold text-gray-800 mb-6">Filters</h2>
-                                
-                                {/* Brand Filter */}
-                                <div className="mb-6">
-                                    <h3 className="text-lg font-semibold text-gray-700 mb-4">Brands</h3>
-                                    <div className="space-y-2 max-h-60 overflow-y-auto">
-                                        {uniqueBrands.map((brand) => (
-                                            <label key={brand} className="flex items-center cursor-pointer group">
-                                                <input
-                                                    type="checkbox"
-                                                    className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
-                                                    checked={selectedBrands.includes(brand)}
-                                                    onChange={() => handleBrandFilter(brand)}
-                                                />
-                                                <span className="ml-3 text-sm text-gray-700 group-hover:text-orange-600 capitalize">
-                                                    {brand}
-                                                </span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
+                        <button
+                            onClick={() => setShowMobileFilters(true)}
+                            className="lg:hidden inline-flex items-center gap-2 border border-zinc-300 text-charcoal px-4 py-2 rounded-full text-sm font-semibold hover:bg-white transition-colors"
+                        >
+                            <SlidersHorizontal className="w-4 h-4" />
+                            Filters
+                        </button>
+                    )}
+                </div>
 
-                                {/* Price Range Filter */}
-                                <div className="mb-6">
-                                    <h3 className="text-lg font-semibold text-gray-700 mb-4">Price Range</h3>
-                                    <div className="space-y-2">
-                                        {['Under RM50', 'RM50 - RM100', 'RM100 - RM200', 'Over RM200'].map((range) => (
-                                            <label key={range} className="flex items-center cursor-pointer group">
-                                                <input
-                                                    type="checkbox"
-                                                    className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
-                                                    checked={selectedPriceRanges.includes(range)}
-                                                    onChange={() => handlePriceRangeFilter(range)}
-                                                />
-                                                <span className="ml-3 text-sm text-gray-700 group-hover:text-orange-600">
-                                                    {range}
-                                                </span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
+                {/* Active filter chips */}
+                {hasActiveFilters && (
+                    <div className="flex flex-wrap gap-2 mb-8">
+                        {selectedBrands.map(brand => (
+                            <button
+                                key={brand}
+                                onClick={() => toggleBrand(brand)}
+                                className="inline-flex items-center gap-1.5 bg-orange-50 text-orange-700 border border-orange-200 px-3 py-1.5 rounded-full text-sm font-medium hover:bg-orange-100 transition-colors capitalize"
+                            >
+                                {brand}
+                                <X className="w-3.5 h-3.5" />
+                            </button>
+                        ))}
+                        {selectedPriceRanges.map(range => (
+                            <button
+                                key={range}
+                                onClick={() => togglePriceRange(range)}
+                                className="inline-flex items-center gap-1.5 bg-orange-50 text-orange-700 border border-orange-200 px-3 py-1.5 rounded-full text-sm font-medium hover:bg-orange-100 transition-colors"
+                            >
+                                {range}
+                                <X className="w-3.5 h-3.5" />
+                            </button>
+                        ))}
+                        <button
+                            onClick={clearAllFilters}
+                            className="text-sm text-zinc-500 hover:text-orange-600 transition-colors underline underline-offset-2"
+                        >
+                            Clear all
+                        </button>
+                    </div>
+                )}
 
-                                {/* Clear Filters Button */}
-                                <button
-                                    onClick={clearAllFilters}
-                                    disabled={selectedBrands.length === 0 && selectedPriceRanges.length === 0}
-                                    className="w-full bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    Clear All Filters
-                                </button>
+                <div className="flex gap-10">
+                    {/* Desktop sidebar */}
+                    {uniqueBrands.length > 0 && (
+                        <div className="hidden lg:block w-64 shrink-0">
+                            <div className="sticky top-24 bg-white rounded-2xl border border-zinc-100 p-6">
+                                <FilterContent />
                             </div>
                         </div>
                     )}
 
-                    {/* Products Grid */}
-                    <div className="lg:w-3/4">
-                        {/* Active Filters Display */}
-                        {(selectedBrands.length > 0 || selectedPriceRanges.length > 0) && (
-                            <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
-                                <h4 className="text-sm font-medium text-gray-700 mb-2">Active Filters:</h4>
-                                <div className="flex flex-wrap gap-2">
-                                    {selectedBrands.map(brand => (
-                                        <span key={brand} className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm flex items-center">
-                                            {brand}
-                                            <button
-                                                onClick={() => handleBrandFilter(brand)}
-                                                aria-label={`Remove ${brand} filter`}
-                                                className="ml-2 text-orange-600 hover:text-orange-800 font-bold"
-                                            >
-                                                ×
-                                            </button>
-                                        </span>
-                                    ))}
-                                    {selectedPriceRanges.map(range => (
-                                        <span key={range} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center">
-                                            {range}
-                                            <button
-                                                onClick={() => handlePriceRangeFilter(range)}
-                                                aria-label={`Remove ${range} filter`}
-                                                className="ml-2 text-blue-600 hover:text-blue-800 font-bold"
-                                            >
-                                                ×
-                                            </button>
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Products */}
+                    {/* Products grid */}
+                    <div className="flex-1 min-w-0">
                         {filteredProducts.length === 0 ? (
-                            <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-                                <h2 className="text-xl font-semibold text-gray-700 mb-4">No Products Found</h2>
-                                <p className="text-gray-600 mb-6">Try adjusting your filters to see more results.</p>
+                            <div className="bg-white rounded-2xl border border-zinc-100 p-12 text-center">
+                                <h2 className="font-display text-xl font-medium text-charcoal mb-3">No products found</h2>
+                                <p className="text-zinc-500 mb-6">Try adjusting your filters to see more results.</p>
                                 <Link
-                                    href="/shop"   
-                                    className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+                                    href="/shop"
+                                    className="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-6 py-3 rounded-full text-sm font-semibold transition-colors"
                                 >
-                                    Browse All Products
+                                    Browse all products
+                                    <ArrowRight className="w-4 h-4" />
                                 </Link>
                             </div>
                         ) : (
@@ -355,44 +229,105 @@ export default function CategoryPage({
                                             <Link
                                                 key={product.id}
                                                 href={`/shop/${product.category?.slug || 'uncategorized'}/${product.slug}`}
-                                                className="group bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300"
+                                                className="group bg-white rounded-2xl border border-zinc-100 overflow-hidden h-full flex flex-col hover:border-orange-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
                                             >
-                                                <div className="relative h-48 bg-gray-100 overflow-hidden">
+                                                <div className="relative h-52 bg-cream overflow-hidden">
                                                     <Image
                                                         src={imageUrl || '/placeholder.svg'}
                                                         alt={product.name}
                                                         fill
                                                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                                        className="object-cover p-4 group-hover:scale-105 transition-transform duration-300"
+                                                        className="object-cover p-4 group-hover:scale-105 transition-transform duration-500"
                                                     />
                                                 </div>
-                                                <div className="p-4">
-                                                    <h3 className="font-semibold text-gray-800 group-hover:text-orange-600 transition-colors line-clamp-2 mb-2">
+                                                <div className="p-6 flex-1 flex flex-col">
+                                                    <h3 className="font-display text-lg font-medium text-charcoal group-hover:text-orange-600 transition-colors line-clamp-2 mb-2">
                                                         {product.name}
                                                     </h3>
-                                                    <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+                                                    <p className="text-sm text-zinc-600 line-clamp-2 mb-4 leading-relaxed">
                                                         {product.description?.short || "Premium flooring solution"}
                                                     </p>
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="text-xs text-gray-500 capitalize">{product.brand}</span>
+                                                    <div className="mt-auto flex items-center justify-between">
+                                                        <span className="text-xs text-zinc-400 capitalize">{product.brand}</span>
                                                         {price > 0 && (
-                                                            <span className="text-sm font-semibold text-orange-600">
-                                                                RM {price.toFixed(2)}
+                                                            <span className="text-sm font-semibold text-charcoal">
+                                                                {formatPrice(price)}
                                                             </span>
                                                         )}
                                                     </div>
                                                 </div>
+                                                <div className="h-1 bg-gradient-to-r from-orange-400 to-orange-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
                                             </Link>
                                         );
                                     })}
                                 </div>
 
-                                <PaginationControls />
+                                {/* Pagination */}
+                                {totalPages > 1 && (
+                                    <div className="flex justify-center items-center gap-2 mt-16">
+                                        <button
+                                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                            disabled={currentPage === 1}
+                                            className="px-5 py-2.5 rounded-full text-sm font-semibold bg-charcoal text-white hover:bg-charcoal/80 transition-colors disabled:bg-cream disabled:text-zinc-400 disabled:cursor-not-allowed"
+                                        >
+                                            Previous
+                                        </button>
+
+                                        <div className="flex gap-1.5">
+                                            {getVisiblePages(currentPage, totalPages).map((page, index) =>
+                                                page === '...' ? (
+                                                    <span key={`ellipsis-${index}`} className="w-10 h-10 flex items-center justify-center text-zinc-400">
+                                                        …
+                                                    </span>
+                                                ) : (
+                                                    <button
+                                                        key={page}
+                                                        onClick={() => setCurrentPage(page as number)}
+                                                        className={`w-10 h-10 flex items-center justify-center rounded-full text-sm font-semibold transition-colors ${
+                                                            currentPage === page
+                                                                ? 'bg-orange-600 text-white'
+                                                                : 'bg-white text-charcoal border border-zinc-200 hover:border-orange-200 hover:text-orange-600'
+                                                        }`}
+                                                    >
+                                                        {page}
+                                                    </button>
+                                                )
+                                            )}
+                                        </div>
+
+                                        <button
+                                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                            disabled={currentPage === totalPages}
+                                            className="px-5 py-2.5 rounded-full text-sm font-semibold bg-charcoal text-white hover:bg-charcoal/80 transition-colors disabled:bg-cream disabled:text-zinc-400 disabled:cursor-not-allowed"
+                                        >
+                                            Next
+                                        </button>
+                                    </div>
+                                )}
                             </>
                         )}
                     </div>
                 </div>
             </div>
-        </div>
+
+            {/* Mobile filter drawer */}
+            {showMobileFilters && (
+                <div className="fixed inset-0 z-50 lg:hidden">
+                    <div className="absolute inset-0 bg-charcoal/50" onClick={() => setShowMobileFilters(false)} />
+                    <div className="absolute right-0 top-0 h-full w-80 max-w-full bg-white p-6 overflow-y-auto shadow-2xl">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="font-display text-xl font-medium text-charcoal">Filters</h2>
+                            <button
+                                onClick={() => setShowMobileFilters(false)}
+                                className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-cream transition-colors"
+                            >
+                                <X className="w-5 h-5 text-charcoal" />
+                            </button>
+                        </div>
+                        <FilterContent />
+                    </div>
+                </div>
+            )}
+        </section>
     );
 }

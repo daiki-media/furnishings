@@ -2,6 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
+import SectionHeading from '@/components/home/section-heading';
 
 const CertificateCarousel = () => {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -102,13 +103,15 @@ const CertificateCarousel = () => {
     }, []);
 
     return (
-        <div className="py-12">
-            <div className="mx-auto  px-4">
-                <h2 className="text-center text-3xl font-bold mb-12 text-black">
-                    Choose with Confidence with Our Certification
-                </h2>
+        <div className="py-24 md:py-32 bg-white">
+            <div className="container mx-auto px-6">
+                <SectionHeading
+                    eyebrow="Certified Quality"
+                    title="Choose with Confidence"
+                    subtitle="Our flooring meets internationally recognised safety and environmental standards."
+                />
 
-                <div className="relative">
+                <div className="relative mt-16">
                     <button
                         onClick={scrollLeft}
                         disabled={!canScrollLeft}
@@ -142,7 +145,7 @@ const CertificateCarousel = () => {
                         {certificates.map((cert) => (
                             <div
                                 key={cert.id}
-                                className="flex-shrink-0 flex items-center justify-center w-48 h-40 bg-white rounded-xl shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 border border-gray-100"
+                                className="flex-shrink-0 flex items-center justify-center w-48 h-40 bg-cream rounded-2xl hover:shadow-lg hover:scale-105 transition-all duration-300 border border-zinc-100"
                             >
                                 <Image
                                     src={cert.logo}
