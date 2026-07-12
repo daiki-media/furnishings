@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import SingleBlogContent from "@/components/blog/single-blog-content";
 import { getBlogBySlug, getBlogs } from "@/lib/api";
+import { getBlogPreviewText } from "@/lib/interfaces";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -32,18 +33,39 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
+  const title = blog.meta_title || blog.title;
+  const description = blog.meta_description || getBlogPreviewText(blog.excerpt, 160) || getBlogPreviewText(blog.content, 160) || "";
+  const imageUrl = blog.featuredImage ? `${baseUrl}/storage/${blog.featuredImage}` : undefined;
+  const canonicalUrl = `${baseUrl}/blog/${blog.slug}`;
 
   return {
-    title: blog.meta_title || blog.title,
-    description: blog.meta_description || blog.excerpt || "",
+    title,
+    description,
     alternates: {
-        canonical: `https://www.furnishings.com.my/blog/${blog.slug}`,
+      canonical: canonicalUrl,
     },
     openGraph: {
-      title: blog.meta_title || blog.title,
-      description: blog.meta_description || blog.excerpt || "",
-      images: blog.featuredImage ? [`${baseUrl}/storage/${blog.featuredImage}`] : [],
-      type: 'article',
+      title,
+      description,
+      url: canonicalUrl,
+      siteName: "Furnishing Solutions",
+      type: "article",
+      publishedTime: blog.publish_date || undefined,
+      authors: blog.author ? [blog.author] : undefined,
+      ...(imageUrl ? {
+        images: [{
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: blog.title,
+        }],
+      } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      ...(imageUrl ? { images: [imageUrl] } : {}),
     },
   };
 }

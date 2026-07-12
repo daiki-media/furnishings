@@ -1,17 +1,14 @@
-import PageHeader from "@/components/common/header"
 import ContactUsPage from "@/components/contact-page/contact-page"
-export const metadata = {
-    title: "Contact Furnishing | Vinyl & Flooring Supplier in Malaysia",
-    description: "Contact Furnishing for vinyl, SPC, laminate flooring, carpet tiles and artificial grass in Malaysia. Request a site visit, quotation or product recommendation for your project today.",
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: "Contact Us | Furnishing Solutions — Flooring Malaysia",
+    description: "Get in touch with Furnishing Solutions for vinyl, SPC, laminate flooring and carpet tiles in Malaysia. Request a free quote, site visit or product advice — via WhatsApp, email or our Selangor showroom.",
     alternates: {
         canonical: "https://www.furnishings.com.my/contact",
     },
 };
+
 export default function ContactUs() {
-    return (
-        <>
-            <PageHeader title="Contact Furnishing" />
-            <ContactUsPage />
-        </>
-    )
+    return <ContactUsPage />;
 }

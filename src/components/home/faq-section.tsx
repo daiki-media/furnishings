@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/accordion";
 import { useState } from "react";
 import { Minus, Plus } from "lucide-react";
-import Script from "next/script"; // ✅ ye add karna
 
 const faqItems = [
     {
@@ -51,7 +50,6 @@ const faqItems = [
 export default function FaqSection() {
     const [openItem, setOpenItem] = useState<string | null>(null);
 
-    // ✅ JSON-LD Schema banake string me convert karo
     const faqSchema = {
         "@context": "https://schema.org",
         "@type": "FAQPage",
@@ -66,14 +64,18 @@ export default function FaqSection() {
     };
 
     return (
-        <section className="px-6 py-12">
-            <div className="container mx-auto">
+        <section className="py-24 md:py-32 bg-cream">
+            <div className="container mx-auto px-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-10 items-start">
                     {/* Sticky Heading */}
                     <div className="md:sticky md:top-24 self-start">
-                        <h2 className="text-3xl font-bold text-left">Frequently Asked Questions</h2>
-                        <p className="text-gray-600 mt-2">
-                            Got questions? We’ve got you covered – check out our most asked queries.
+                        <span className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold uppercase tracking-[0.25em] text-orange-600 mb-5">
+                            <span className="h-px w-6 bg-orange-500/60" />
+                            Got Questions?
+                        </span>
+                        <h2 className="font-display text-4xl md:text-5xl font-medium tracking-tight text-charcoal leading-[1.1]">Frequently asked questions</h2>
+                        <p className="text-zinc-500 mt-5 text-lg leading-relaxed">
+                            Everything you need to know about our flooring — check out our most asked queries.
                         </p>
                     </div>
 
@@ -82,7 +84,7 @@ export default function FaqSection() {
                         <Accordion
                             type="single"
                             collapsible
-                            className="w-full border border-orange-100 rounded-lg shadow-sm divide-y"
+                            className="w-full bg-white border border-zinc-100 rounded-2xl divide-y divide-zinc-200/70 overflow-hidden"
                             onValueChange={(val) => setOpenItem(val)}
                         >
                             {faqItems.map((item, index) => {
@@ -119,11 +121,8 @@ export default function FaqSection() {
                 </div>
             </div>
 
-            {/* ✅ Yaha Schema inject ho raha hai */}
-            <Script
-                id="faq-schema"
+            <script
                 type="application/ld+json"
-                strategy="afterInteractive"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
             />
         </section>

@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import SquareLoader from "../common/loader";
 import { Suspense } from 'react';
 import { Category, Product, ProductListItem, toProductListItem, formatPrice } from "@/lib/interfaces";
+import { ArrowRight, X, SlidersHorizontal } from "lucide-react";
 
 interface ProductsSectionProps {
     page?: number;
@@ -52,7 +53,7 @@ function ProductsSectionContent({
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    const [hoveredProduct, setHoveredProduct] = useState<number | null>(null);
+    const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
     // Filter states - initialize from URL
     const [selectedCategories, setSelectedCategories] = useState<string[]>(
@@ -176,79 +177,134 @@ function ProductsSectionContent({
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [router, searchParams]);
 
-    // Get unique brands from all products (not just current page)
-    const brands = useMemo(() => {
-        const uniqueBrands = new Set<string>();
-        // We need to fetch all products for brands, but this is just for filter display
-        // You might want to fetch brands separately from API
-        return Array.from(uniqueBrands);
-    }, []);
+    const uniqueBrands = useMemo(() => {
+        const brands = new Set<string>();
+        initialProducts.forEach(p => {
+            const brand = p.brand?.toLowerCase().trim();
+            if (brand) brands.add(brand);
+        });
+        return Array.from(brands).sort();
+    }, [initialProducts]);
+
+    const renderFilters = () => (
+        <>
+            <div className="flex justify-between items-center mb-6">
+                <h3 className="font-display text-xl font-medium text-charcoal">Filters</h3>
+            </div>
+
+            <div className="mb-8">
+                <h4 className="text-sm font-semibold text-charcoal uppercase tracking-wide mb-3">Categories</h4>
+                <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                    {categories.map((cat) => (
+                        <label key={cat.id} className="flex items-center cursor-pointer group">
+                            <input
+                                type="checkbox"
+                                checked={selectedCategories.includes(cat.name)}
+                                onChange={() => handleCategoryChange(cat.name)}
+                                className="w-4 h-4 accent-orange-600 rounded border-zinc-300 focus:ring-orange-500"
+                            />
+                            <span className="ml-2 text-sm text-zinc-600 group-hover:text-orange-600 transition-colors">
+                                {cat.name} ({cat.products_count})
+                            </span>
+                        </label>
+                    ))}
+                </div>
+            </div>
+
+            {uniqueBrands.length > 0 && (
+                <div className="mb-8">
+                    <h4 className="text-sm font-semibold text-charcoal uppercase tracking-wide mb-3">Brand</h4>
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                        {uniqueBrands.map((brand) => (
+                            <label key={brand} className="flex items-center cursor-pointer group">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedBrands.includes(brand)}
+                                    onChange={() => handleBrandChange(brand)}
+                                    className="w-4 h-4 accent-orange-600 rounded border-zinc-300 focus:ring-orange-500"
+                                />
+                                <span className="ml-2 text-sm text-zinc-600 group-hover:text-orange-600 transition-colors capitalize">
+                                    {brand}
+                                </span>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {(selectedCategories.length > 0 || selectedBrands.length > 0 || sortBy !== 'default') && (
+                <button
+                    onClick={handleClearFilters}
+                    className="w-full bg-orange-600 text-white px-4 py-2 rounded-full text-base font-medium hover:bg-orange-500 transition-colors"
+                >
+                    Clear All Filters
+                </button>
+            )}
+        </>
+    );
 
     return (
-        <div className="py-16 bg-white">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-cream py-16 md:py-24">
+            <div className="container mx-auto px-6">
                 <div className="text-center mb-12">
-                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-charcoal mb-4">
                         Our Products
                     </h2>
-                    <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                    <p className="text-lg text-zinc-600 max-w-2xl mx-auto">
                         Enhance your home or office with our elegant and durable flooring collections.
                     </p>
                 </div>
 
                 <div className="flex flex-col lg:flex-row gap-8">
-                    {/* Filters Sidebar */}
-                    {products.length > 0 && (
-                        <div className="w-full lg:w-64 flex-shrink-0">
-                            <div className="bg-gray-50 p-6 rounded-lg sticky top-24">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
-                                </div>
-
-                                <div className="mb-8">
-                                    <h4 className="font-medium text-gray-900 mb-3">Categories</h4>
-                                    <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                                        {categories.map((cat) => (
-                                            <label key={cat.id} className="flex items-center cursor-pointer group">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedCategories.includes(cat.name)}
-                                                    onChange={() => handleCategoryChange(cat.name)}
-                                                    className="w-4 h-4 accent-orange-600 rounded border-gray-300 focus:ring-orange-500"
-                                                />
-                                                <span className="ml-2 text-sm text-gray-700 group-hover:text-orange-600 transition-colors">
-                                                    {cat.name} ({cat.products_count})
-                                                </span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {(selectedCategories.length > 0 || selectedBrands.length > 0 || sortBy !== 'default') && (
-                                    <button
-                                        onClick={handleClearFilters}
-                                        className="w-full bg-orange-600 text-white px-4 py-2 rounded text-base font-medium hover:bg-orange-700 transition-colors"
-                                    >
-                                        Clear All Filters
+                    {/* Mobile Filters Drawer */}
+                    {isMobileFiltersOpen && (
+                        <div className="fixed inset-0 z-50 flex lg:hidden">
+                            <div className="fixed inset-0 bg-black/30" onClick={() => setIsMobileFiltersOpen(false)} />
+                            <div className="relative ml-auto w-full max-w-xs h-full bg-white flex flex-col py-6 px-4 shadow-xl overflow-y-auto">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h3 className="font-display text-xl font-medium text-charcoal">Filters</h3>
+                                    <button type="button" onClick={() => setIsMobileFiltersOpen(false)} className="text-zinc-400 hover:text-zinc-500">
+                                        <span className="sr-only">Close menu</span>
+                                        <X className="h-6 w-6" aria-hidden="true" />
                                     </button>
-                                )}
+                                </div>
+                                {renderFilters()}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Desktop Filters Sidebar */}
+                    {products.length > 0 && (
+                        <div className="hidden lg:block w-full lg:w-64 flex-shrink-0">
+                            <div className="bg-white rounded-2xl border border-zinc-100 p-6 sticky top-24">
+                                {renderFilters()}
                             </div>
                         </div>
                     )}
 
                     {/* Products Grid */}
                     <div className="flex-1 w-full">
-                        <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
-                            <div className="text-sm text-gray-600 mb-4 sm:mb-0">
-                                Showing {products.length} of {totalProducts} products
+                        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+                            <div className="flex items-center gap-4 w-full sm:w-auto">
+                                <button
+                                    onClick={() => setIsMobileFiltersOpen(true)}
+                                    className="lg:hidden flex items-center gap-2 text-sm font-medium text-charcoal border border-zinc-200 rounded-xl px-4 py-2 bg-white"
+                                >
+                                    <SlidersHorizontal className="w-4 h-4" />
+                                    Filters
+                                </button>
+                                <div className="text-sm text-zinc-600">
+                                    Showing {products.length} of {totalProducts} products
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <label htmlFor="sort" className="text-sm text-gray-600">Sort by:</label>
+                            
+                            <div className="flex items-center gap-2 w-full sm:w-auto">
+                                <label htmlFor="sort" className="text-sm text-zinc-600 whitespace-nowrap">Sort by:</label>
                                 <select
                                     id="sort"
                                     value={sortBy}
                                     onChange={handleSortChange}
-                                    className="text-sm border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                    className="text-sm border border-zinc-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500/40 text-charcoal w-full sm:w-auto bg-white"
                                 >
                                     <option value="default">Default</option>
                                     <option value="price-asc">Price: Low to High</option>
@@ -260,20 +316,20 @@ function ProductsSectionContent({
                         </div>
 
                         {products.length === 0 ? (
-                            <div className="text-center py-12">
+                            <div className="text-center py-12 rounded-2xl border border-zinc-100 text-charcoal bg-white">
                                 {fetchFailed ? (
-                                    <p className="text-gray-500 text-lg mb-4">
+                                    <p className="text-lg mb-4">
                                         We&apos;re having trouble loading products right now. Please try again shortly.
                                     </p>
                                 ) : (
                                     <>
-                                        <p className="text-gray-500 text-lg mb-4">No products found.</p>
-                                        <Link
-                                            href="/shop"
-                                            className="text-orange-600 hover:text-orange-700 font-medium"
+                                        <p className="text-lg mb-4">No products found.</p>
+                                        <button
+                                            onClick={handleClearFilters}
+                                            className="text-orange-600 hover:text-orange-500 font-medium"
                                         >
-                                            Browse all products
-                                        </Link>
+                                            Clear all filters
+                                        </button>
                                     </>
                                 )}
                             </div>
@@ -284,8 +340,6 @@ function ProductsSectionContent({
                                         <ProductCard
                                             key={product.id}
                                             product={product}
-                                            isHovered={hoveredProduct === product.id}
-                                            onHover={setHoveredProduct}
                                         />
                                     ))}
                                 </div>
@@ -308,24 +362,18 @@ function ProductsSectionContent({
 
 // Product Card Component
 function ProductCard({ 
-    product, 
-    isHovered, 
-    onHover 
+    product 
 }: { 
     product: ProductListItem; 
-    isHovered: boolean; 
-    onHover: (id: number | null) => void;
 }) {
     const formattedPrice = formatPrice(product.price);
 
     return (
         <Link
             href={`/shop/${product.category.slug}/${product.slug}`}
-            className="group relative overflow-hidden rounded-2xl bg-white shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-            onMouseEnter={() => onHover(product.id)}
-            onMouseLeave={() => onHover(null)}
+            className="group relative flex flex-col overflow-hidden bg-white rounded-2xl border border-zinc-100 hover:border-orange-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
         >
-            <div className="relative h-56 overflow-hidden bg-orange-100">
+            <div className="relative h-56 overflow-hidden bg-cream">
                 <Image
                     src={product.image || "/placeholder.svg"}
                     alt={product.name}
@@ -336,41 +384,29 @@ function ProductCard({
                 />
             </div>
 
-            <div className="p-6">
-                <h3 className="text-xl font-semibold mb-3 text-gray-800 group-hover:text-orange-600 transition-colors duration-300 line-clamp-2">
+            <div className="flex flex-col flex-grow p-6">
+                <h3 className="font-display text-lg font-medium mb-3 text-charcoal group-hover:text-orange-600 transition-colors duration-300 line-clamp-2">
                     {product.name}
                 </h3>
-                <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                <p className="text-sm text-zinc-600 mb-4 line-clamp-2 flex-grow">
                     {product.description || "Premium quality flooring solution for your space."}
                 </p>
 
                 {formattedPrice && (
                     <div className="mb-3">
-                        <span className="text-lg font-bold text-gray-900">
+                        <span className="text-sm font-semibold text-charcoal">
                             {formattedPrice}
                         </span>
                     </div>
                 )}
 
-                <div className="flex items-center text-orange-500 font-medium">
+                <div className="flex items-center text-orange-600 font-medium mt-auto pb-1">
                     <span className="text-sm">View Product</span>
-                    <svg
-                        className={`w-4 h-4 ml-2 transition-transform duration-300 ${
-                            isHovered ? 'translate-x-1' : ''
-                        }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 5l7 7-7 7"
-                        />
-                    </svg>
+                    <ArrowRight className="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform duration-300" />
                 </div>
             </div>
+            
+            <div className="h-1 bg-gradient-to-r from-orange-400 to-orange-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
         </Link>
     );
 }
@@ -406,10 +442,10 @@ function Pagination({
             <button
                 onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`px-4 py-2 rounded-md transition-colors ${
+                className={`px-4 py-2 rounded-full transition-colors ${
                     currentPage === 1
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-orange-600 text-white hover:bg-orange-700'
+                        ? 'bg-cream text-zinc-400 cursor-not-allowed'
+                        : 'bg-charcoal text-white hover:bg-zinc-800'
                 }`}
             >
                 Previous
@@ -418,17 +454,17 @@ function Pagination({
             <div className="flex space-x-2">
                 {visiblePages.map((page, index) => (
                     page === '...' ? (
-                        <span key={`ellipsis-${index}`} className="w-10 h-10 flex items-center justify-center">
-                            ...
+                        <span key={`ellipsis-${index}`} className="w-10 h-10 flex items-center justify-center text-zinc-600">
+                            …
                         </span>
                     ) : (
                         <button
                             key={page}
                             onClick={() => onPageChange(page as number)}
-                            className={`w-10 h-10 rounded-md transition-colors ${
+                            className={`w-10 h-10 rounded-full transition-colors ${
                                 currentPage === page
                                     ? 'bg-orange-600 text-white'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    : 'bg-white text-zinc-600 hover:bg-zinc-100'
                             }`}
                         >
                             {page}
@@ -440,10 +476,10 @@ function Pagination({
             <button
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className={`px-4 py-2 rounded-md transition-colors ${
+                className={`px-4 py-2 rounded-full transition-colors ${
                     currentPage === totalPages
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-orange-600 text-white hover:bg-orange-700'
+                        ? 'bg-cream text-zinc-400 cursor-not-allowed'
+                        : 'bg-charcoal text-white hover:bg-zinc-800'
                 }`}
             >
                 Next

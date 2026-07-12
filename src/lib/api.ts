@@ -21,6 +21,10 @@ async function fetchWithRetry(url: string, options: RequestInit = {}, retries = 
       clearTimeout(timeoutId);
 
       if (!res.ok) {
+        // 404 is definitive — the resource doesn't exist, retrying won't help.
+        // Return null immediately so callers fall back without noisy retries.
+        if (res.status === 404) return null;
+
         console.error(`API error (attempt ${i + 1}/${retries}):`, res.status);
         if (i === retries - 1) return null;
         continue;

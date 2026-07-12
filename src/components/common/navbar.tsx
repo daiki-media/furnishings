@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { ChevronDown, Menu, X } from 'lucide-react';
-import { Button } from "@/components/ui/button";
+import { usePathname } from 'next/navigation';
+import { ChevronDown, Menu, X, ArrowRight } from 'lucide-react';
 import SearchAutoComplete from '@/components/common/SearchAutoComplete';
+import Logo from '@/components/common/logo';
 import { getCategories } from '@/lib/api';
-import { Category } from '@/lib/interfaces'; 
+import { Category } from '@/lib/interfaces';
 
 interface NavItem {
     label: string;
@@ -18,179 +18,196 @@ interface NavItem {
 const Navbar = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [categories, setCategories] = useState<Category[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [scrolled, setScrolled] = useState(false);
+    const pathname = usePathname();
 
-    const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
+    const toggleMobileMenu = () => setMobileMenuOpen((v) => !v);
 
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                setLoading(true);
                 const data = await getCategories();
                 setCategories(data || []);
             } catch (error) {
                 console.error('Error fetching categories:', error);
                 setCategories([]);
-            } finally {
-                setLoading(false);
             }
         };
-
         fetchCategories();
     }, []);
 
+    // Subtle elevation once the user scrolls past the hero edge.
     useEffect(() => {
-        if (mobileMenuOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'unset';
-        }
-        return () => {
-            document.body.style.overflow = 'unset';
-        };
+        const onScroll = () => setScrolled(window.scrollY > 8);
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
+
+    useEffect(() => {
+        document.body.style.overflow = mobileMenuOpen ? 'hidden' : 'unset';
+        return () => { document.body.style.overflow = 'unset'; };
     }, [mobileMenuOpen]);
 
-    // Build category structure based on your actual data
-    const exploreCategories = categories.map(cat => ({
+    const exploreCategories = categories.map((cat) => ({
         label: cat.name,
-        href: `/category/${cat.slug}`
+        href: `/category/${cat.slug}`,
     }));
 
     const mainNavItems: NavItem[] = [
-        { label: "Home", href: "/" },
-        { label: "About Us", href: "/about-us" },
+        { label: 'Home', href: '/' },
         {
-            label: "Explore Categories",
-            href: "/category",
+            label: 'Categories',
+            href: '/category',
             dropdown: exploreCategories,
         },
-        { label: "Contact", href: "/contact" },
-        { label: "Shop", href: "/shop" },
-        { label: "Blogs", href: "/blog" },
+        { label: 'About', href: '/about-us' },
+        { label: 'Blog', href: '/blog' },
+        { label: 'Contact', href: '/contact' },
     ];
 
-    // Desktop NavLink component
-    const DesktopNavLink = ({ item }: { item: NavItem }) => (
-        <div className="relative group">
-            <a 
-                href={item.href} 
-                className="flex items-center font-semibold px-3 py-2 text-black hover:text-orange-400 transition"
-            >
-                {item.label}
-                {item.dropdown && item.dropdown.length > 0 && (
-                    <ChevronDown className="h-4 w-4 ml-1 transition-transform group-hover:rotate-180" />
-                )}
-            </a>
+    const isActive = (href: string) =>
+        href === '/' ? pathname === '/' : pathname.startsWith(href);
 
-            {item.dropdown && item.dropdown.length > 0 && (
-                <div className="absolute top-full left-0 mt-0 bg-white shadow-lg border rounded-md w-48 opacity-0 group-hover:opacity-100 group-hover:visible invisible transition duration-300">
-                    <div className="flex flex-col p-2">
-                        {item.dropdown.map((cat, idx) => (
-                            <a 
-                                key={idx}
-                                href={cat.href} 
-                                className="block px-3 py-2 text-base font-normal hover:bg-gray-100 hover:text-orange-400 rounded-md"
-                            >
-                                {cat.label}
-                            </a>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-
-    // Mobile NavLink component
-    const MobileNavLink = ({ item }: { item: NavItem }) => (
-        <div className="w-full">
-            <a
-                href={item.href}
-                className="block px-4 py-3 text-lg font-medium text-gray-900 hover:bg-gray-100 rounded-md transition"
-                onClick={() => !item.dropdown && setMobileMenuOpen(false)}
-            >
-                {item.label}
-            </a>
-            {item.dropdown && item.dropdown.length > 0 && (
-                <div className="ml-4 border-l pl-4 space-y-2 mt-2">
-                    {item.dropdown.map((cat, idx) => (
-                        <a
-                            key={idx}
-                            href={cat.href}
-                            className="block px-4 py-2 text-base text-gray-700 hover:bg-gray-100 rounded-md"
-                            onClick={() => setMobileMenuOpen(false)}
-                        >
-                            {cat.label}
-                        </a>
-                    ))}
-                </div>
-            )}
-        </div>
-    );
-
-    return (
-        <header className="w-full bg-white border-b border-gray-200 shadow-md sticky top-0 z-50">
-            <div className="container mx-auto flex items-center justify-between px-4 py-3">
-                <Link href="/" className="flex items-center space-x-2">
-                    <Image 
-                        src="/images/logo (2).png" 
-                        alt="Logo" 
-                        width={50} 
-                        height={50} 
-                        className="rounded-md"
-                        priority
+    const DesktopNavLink = ({ item }: { item: NavItem }) => {
+        const active = isActive(item.href);
+        return (
+            <div className="relative group">
+                <Link
+                    href={item.href}
+                    className={`flex items-center gap-1 px-1 py-2 text-sm font-medium transition-colors ${active ? 'text-orange-600' : 'text-charcoal hover:text-orange-600'
+                        }`}
+                >
+                    {item.label}
+                    {item.dropdown && item.dropdown.length > 0 && (
+                        <ChevronDown className="h-4 w-4 transition-transform group-hover:rotate-180" />
+                    )}
+                    {/* Animated underline */}
+                    <span
+                        className={`pointer-events-none absolute -bottom-0.5 left-0 h-0.5 bg-orange-500 transition-all duration-300 ${active ? 'w-full' : 'w-0 group-hover:w-full'
+                            }`}
                     />
                 </Link>
 
+                {item.dropdown && item.dropdown.length > 0 && (
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 pt-3 w-60 opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200">
+                        <div className="bg-white rounded-2xl shadow-xl shadow-zinc-900/10 border border-zinc-100 p-2 max-h-96 overflow-y-auto">
+                            {item.dropdown.map((cat, idx) => (
+                                <Link
+                                    key={idx}
+                                    href={cat.href}
+                                    className="block px-3 py-2.5 text-sm text-zinc-600 hover:bg-cream hover:text-orange-600 rounded-xl transition-colors"
+                                >
+                                    {cat.label}
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    return (
+        <header
+            className={`sticky top-0 z-50 w-full bg-white/90 backdrop-blur-md transition-shadow duration-300 ${scrolled ? 'shadow-md shadow-zinc-900/5 border-b border-zinc-100' : 'border-b border-transparent'
+                }`}
+        >
+            <div className="container mx-auto flex items-center justify-between gap-6 px-6 py-3">
+                <Logo />
+
                 {/* Desktop Navigation */}
-                <nav className="hidden md:flex space-x-8 items-center">
+                <nav className="hidden lg:flex items-center gap-8">
                     {mainNavItems.map((item, i) => (
                         <DesktopNavLink key={i} item={item} />
                     ))}
                 </nav>
 
-                {/* Desktop Search */}
-                <div className="hidden md:block w-64">
-                    <SearchAutoComplete />
+                {/* Right cluster: search + Shop CTA */}
+                <div className="hidden lg:flex items-center gap-4">
+                    <div className="w-56">
+                        <SearchAutoComplete />
+                    </div>
+                    <Link
+                        href="/shop"
+                        className="group inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 shadow-md shadow-orange-900/15"
+                    >
+                        Shop
+                        <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                    </Link>
                 </div>
 
                 {/* Mobile Menu Button */}
-                <div className="md:hidden">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={toggleMobileMenu}
-                        aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-                    >
-                        {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                    </Button>
-                </div>
+                <button
+                    onClick={toggleMobileMenu}
+                    aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+                    className="lg:hidden flex items-center justify-center w-10 h-10 rounded-xl text-charcoal hover:bg-cream transition-colors"
+                >
+                    {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                </button>
             </div>
 
             {/* Mobile Menu */}
             {mobileMenuOpen && (
-                <div className="fixed inset-0 bg-white z-40 overflow-y-auto md:hidden">
-                    <div className="flex justify-between items-center px-4 py-3 border-b shadow-md">
-                        <Link href="/" onClick={() => setMobileMenuOpen(false)}>
-                            <Image src="/images/logo (2).png" alt="Logo" width={40} height={40} className="rounded-md" />
-                        </Link>
-                        <Button variant="ghost" size="icon" onClick={toggleMobileMenu} aria-label="Close menu">
+                <div className="fixed inset-0 top-0 bg-white z-40 overflow-y-auto lg:hidden">
+                    <div className="flex justify-between items-center px-6 py-3 border-b border-zinc-100">
+                        <Logo />
+                        <button
+                            onClick={toggleMobileMenu}
+                            aria-label="Close menu"
+                            className="flex items-center justify-center w-10 h-10 rounded-xl text-charcoal hover:bg-cream transition-colors"
+                        >
                             <X className="w-6 h-6" />
-                        </Button>
+                        </button>
                     </div>
 
-                    <div className="p-4 border-b">
+                    <div className="p-6 border-b border-zinc-100">
                         <SearchAutoComplete />
                     </div>
 
-                    <div className="flex flex-col space-y-2 p-4">
+                    <nav className="flex flex-col p-4">
                         {mainNavItems.map((item, idx) => (
-                            <MobileNavLink key={idx} item={item} />
+                            <div key={idx} className="w-full">
+                                <Link
+                                    href={item.href}
+                                    className={`block px-4 py-3 text-lg font-medium rounded-xl transition-colors ${isActive(item.href) ? 'text-orange-600 bg-cream' : 'text-charcoal hover:bg-cream'
+                                        }`}
+                                    onClick={() => !item.dropdown && setMobileMenuOpen(false)}
+                                >
+                                    {item.label}
+                                </Link>
+                                {item.dropdown && item.dropdown.length > 0 && (
+                                    <div className="ml-4 border-l border-zinc-200 pl-4 my-1 space-y-1">
+                                        {item.dropdown.map((cat, i) => (
+                                            <Link
+                                                key={i}
+                                                href={cat.href}
+                                                className="block px-4 py-2 text-base text-zinc-600 hover:text-orange-600 rounded-lg transition-colors"
+                                                onClick={() => setMobileMenuOpen(false)}
+                                            >
+                                                {cat.label}
+                                            </Link>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         ))}
+                    </nav>
+
+                    <div className="p-6">
+                        <Link
+                            href="/shop"
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-6 py-4 rounded-full text-base font-semibold transition-colors"
+                        >
+                            Shop the Collection
+                            <ArrowRight className="w-5 h-5" />
+                        </Link>
                     </div>
                 </div>
             )}
         </header>
     );
-}
+};
 
 export default Navbar;
