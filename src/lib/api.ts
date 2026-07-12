@@ -74,7 +74,7 @@ const fetchProductsWithStatus = async (): Promise<{ data: any[]; failed: boolean
     const isBrowser = typeof window !== "undefined";
     const res = await fetchWithRetry(
       isBrowser ? "/api/products" : `${API_BASE}/products`,
-      isBrowser ? {} : { cache: "no-store" as RequestCache }
+      isBrowser ? {} : { next: { revalidate: 1800 } }
     );
 
     if (!res) return { data: [], failed: true };
@@ -217,7 +217,7 @@ function sortBlogsStable(blogs: Blog[]): Blog[] {
 export const getBlogs = cache(async () => {
   try {
     const res = await fetchWithRetry(`${API_BASE}/blogs/all-blogs`, {
-      cache: "no-store" as RequestCache,
+      next: { revalidate: 1800 },
     });
 
     if (!res) {
