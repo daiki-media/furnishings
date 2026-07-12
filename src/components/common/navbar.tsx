@@ -92,19 +92,15 @@ const Navbar = () => {
                 {item.dropdown && item.dropdown.length > 0 && (
                     <div className="absolute top-full left-1/2 -translate-x-1/2 pt-3 w-60 opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200">
                         <div className="bg-white rounded-2xl shadow-xl shadow-zinc-900/10 border border-zinc-100 p-2 max-h-96 overflow-y-auto">
-                            {item.dropdown.length === 0 ? (
-                                <p className="px-3 py-2 text-sm text-zinc-400">Loading…</p>
-                            ) : (
-                                item.dropdown.map((cat, idx) => (
-                                    <Link
-                                        key={idx}
-                                        href={cat.href}
-                                        className="block px-3 py-2.5 text-sm text-zinc-600 hover:bg-cream hover:text-orange-600 rounded-xl transition-colors"
-                                    >
-                                        {cat.label}
-                                    </Link>
-                                ))
-                            )}
+                            {item.dropdown.map((cat, idx) => (
+                                <Link
+                                    key={idx}
+                                    href={cat.href}
+                                    className="block px-3 py-2.5 text-sm text-zinc-600 hover:bg-cream hover:text-orange-600 rounded-xl transition-colors"
+                                >
+                                    {cat.label}
+                                </Link>
+                            ))}
                         </div>
                     </div>
                 )}

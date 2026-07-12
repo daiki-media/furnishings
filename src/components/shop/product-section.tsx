@@ -177,6 +177,15 @@ function ProductsSectionContent({
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [router, searchParams]);
 
+    const uniqueBrands = useMemo(() => {
+        const brands = new Set<string>();
+        initialProducts.forEach(p => {
+            const brand = p.brand?.toLowerCase().trim();
+            if (brand) brands.add(brand);
+        });
+        return Array.from(brands).sort();
+    }, [initialProducts]);
+
     const renderFilters = () => (
         <>
             <div className="flex justify-between items-center mb-6">
@@ -184,7 +193,7 @@ function ProductsSectionContent({
             </div>
 
             <div className="mb-8">
-                <h4 className="font-medium text-charcoal mb-3">Categories</h4>
+                <h4 className="text-sm font-semibold text-charcoal uppercase tracking-wide mb-3">Categories</h4>
                 <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
                     {categories.map((cat) => (
                         <label key={cat.id} className="flex items-center cursor-pointer group">
@@ -201,6 +210,27 @@ function ProductsSectionContent({
                     ))}
                 </div>
             </div>
+
+            {uniqueBrands.length > 0 && (
+                <div className="mb-8">
+                    <h4 className="text-sm font-semibold text-charcoal uppercase tracking-wide mb-3">Brand</h4>
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                        {uniqueBrands.map((brand) => (
+                            <label key={brand} className="flex items-center cursor-pointer group">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedBrands.includes(brand)}
+                                    onChange={() => handleBrandChange(brand)}
+                                    className="w-4 h-4 accent-orange-600 rounded border-zinc-300 focus:ring-orange-500"
+                                />
+                                <span className="ml-2 text-sm text-zinc-600 group-hover:text-orange-600 transition-colors capitalize">
+                                    {brand}
+                                </span>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {(selectedCategories.length > 0 || selectedBrands.length > 0 || sortBy !== 'default') && (
                 <button
