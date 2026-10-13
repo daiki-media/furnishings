@@ -118,6 +118,19 @@ export const getProductsStatus = cache(async () => {
   return { count: data.length, failed };
 });
 
+function cleanSlug(value: string): string {
+  let decoded = value;
+  try {
+    decoded = decodeURIComponent(value);
+  } catch {
+    // keep the raw value if it is not valid percent-encoding
+  }
+  return decoded
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export const getProductBySlug = cache(async (slug: string) => {
   const normalizedSlug = slug.toLowerCase().trim();
 
@@ -133,6 +146,16 @@ export const getProductBySlug = cache(async (slug: string) => {
       (p: any) => p.slug?.toLowerCase().trim() === normalizedSlug
     );
     if (found) return found;
+
+    // Legacy URLs: product slugs used to contain spaces, repeated hyphens or
+    // a leading "-" before they were cleaned up in the CMS. Match those on
+    // their cleaned form so old links still resolve (the page then redirects
+    // to the current slug) instead of becoming soft 404s.
+    const cleaned = cleanSlug(slug);
+    const legacy = cleaned
+      ? products.find((p: any) => cleanSlug(p.slug || "") === cleaned)
+      : undefined;
+    if (legacy) return legacy;
 
     // Fallback for a product that isn't in the general list yet (e.g. just
     // published, ahead of that cache's revalidation). Search the response

@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import SingleProduct from "@/components/shop/single-product";
@@ -67,6 +67,14 @@ export default async function ProductPage({
   notFound();
 }
 
+function decodeSlug(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 async function ProductContent({
   category,
   productSlug,
@@ -83,6 +91,12 @@ async function ProductContent({
   const canonicalCategory = productData.category?.slug || "uncategorized";
   if (category.toLowerCase().trim() !== canonicalCategory.toLowerCase().trim()) {
     redirect(`/shop/${canonicalCategory}/${productData.slug}`);
+  }
+  // Reached through a legacy slug (spaces, extra hyphens, leading "-"):
+  // send the visitor to the current URL. Case-only differences are left to
+  // the canonical tag so prerendered paths never redirect to themselves.
+  if (decodeSlug(productSlug).toLowerCase().trim() !== productData.slug.toLowerCase().trim()) {
+    permanentRedirect(`/shop/${canonicalCategory}/${productData.slug}`);
   }
 
   const productWithFullUrls = {

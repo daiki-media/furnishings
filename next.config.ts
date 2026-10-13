@@ -34,6 +34,23 @@ const nextConfig: NextConfig = {
         destination: "/terms-and-conditions",
         permanent: true,
       },
+      // Product slugs cleaned up in the CMS (Oct 2026). Other legacy slug
+      // forms are resolved in getProductBySlug; these get a real 301 because
+      // they were live, linked URLs. The last one cannot be derived: the
+      // product had been given another product's slug.
+      ...[
+        ["-eclipse-premium-eclipse-light-green-0975", "eclipse-premium-eclipse-light-green-0975"],
+        ["-topaz-70-kiruma-cinders", "topaz-70-kiruma-cinders"],
+        ["-topaz-70-kiruma-cinerous", "topaz-70-kiruma-cinerous"],
+        ["-topaz-70-oro-ashes", "topaz-70-oro-ashes"],
+        ["eclipse-premium---eclipse-medium-cool-grey-0967", "eclipse-premium-eclipse-medium-cool-grey-0967"],
+        ["versafloor-oak-vinyl-sheet---cocoa-brown", "versafloor-oak-vinyl-sheet-cocoa-brown"],
+        ["-tapiflex-essential-50-stamp-dark-blue", "tapiflex-tiles-50-stamp-dark-blue"],
+      ].map(([from, to]) => ({
+        source: `/shop/:category/${from}`,
+        destination: `/shop/:category/${to}`,
+        permanent: true,
+      })),
     ];
   },
 
