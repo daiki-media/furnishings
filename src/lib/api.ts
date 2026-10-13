@@ -198,6 +198,16 @@ export const getCategories = cache(async () => {
 });
 
 
+// Only posts the CMS marks as Published may reach the site. The all-blogs
+// endpoint has returned draft/test records before (SEO-015, Oct 2026), and
+// nothing downstream (listing, single post, sitemap) checks status, so filter
+// once here at the source.
+function onlyPublished(blogs: Blog[]): Blog[] {
+  return blogs.filter(
+    (blog) => !blog?.status || blog.status.toLowerCase() === "published"
+  );
+}
+
 // Stable sort so pagination (archive pages, /blog/page/[n]) always slices the
 // same order. Without this, posts can shift position between requests and a
 // page can end up empty while another post is skipped entirely.
@@ -227,7 +237,7 @@ export const getBlogs = cache(async () => {
     const data = await res.json();
 
     if (Array.isArray(data)) {
-      const sorted = sortBlogsStable(data);
+      const sorted = sortBlogsStable(onlyPublished(data));
       return {
         success: true,
         data: sorted,
@@ -240,7 +250,7 @@ export const getBlogs = cache(async () => {
     }
 
     if (data?.data && Array.isArray(data.data)) {
-      const sorted = sortBlogsStable(data.data);
+      const sorted = sortBlogsStable(onlyPublished(data.data));
       return {
         success: true,
         data: sorted,
@@ -280,7 +290,12 @@ export const getBlogBySlug = cache(async (slug: string) => {
     if (res) {
       const data = await res.json();
       // Handle both direct object and wrapped responses
-      if (data && !data.error) return data.data ?? data;
+      if (data && !data.error) {
+        const blog = data.data ?? data;
+        // A direct slug hit still has to be Published to be served.
+        if (blog?.status && blog.status.toLowerCase() !== "published") return null;
+        return blog;
+      }
     }
 
     // Fallback: search within all blogs
