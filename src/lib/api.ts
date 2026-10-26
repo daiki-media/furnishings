@@ -3,6 +3,19 @@ import { Blog } from "./interfaces";
 
 const API_BASE = "https://cms.furnishings.daikimedia.com/api";
 
+// Retries use a unique URL so they never read a cached copy of the failure.
+// Next's Data Cache stores fetch responses whatever their status, and on
+// Vercel it survives redeploys. The products and blogs responses are over its
+// 2 MB limit, so a successful response is never cached but a small error page
+// (e.g. the CMS's 508 "resource limit reached") is, for the whole revalidate
+// window. Every retry then read the same cached 508 and /shop showed "We're
+// having trouble loading products" for every visitor (Oct 2026).
+function retryUrl(url: string, attempt: number): string {
+  if (attempt === 0) return url;
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}_retry=${Date.now()}-${attempt}`;
+}
+
 async function fetchWithRetry(url: string, options: RequestInit = {}, retries = 3) {
   for (let i = 0; i < retries; i++) {
     try {
@@ -13,7 +26,7 @@ async function fetchWithRetry(url: string, options: RequestInit = {}, retries = 
       // builds/background revalidations hit the CMS.
       const timeoutId = setTimeout(() => controller.abort(), 45000);
 
-      const res = await fetch(url, {
+      const res = await fetch(retryUrl(url, i), {
         ...options,
         signal: controller.signal,
       });
@@ -23,6 +36,8 @@ async function fetchWithRetry(url: string, options: RequestInit = {}, retries = 
       if (!res.ok) {
         console.error(`API error (attempt ${i + 1}/${retries}):`, res.status);
         if (i === retries - 1) return null;
+        // Brief pause: a 508 means the CMS hit its resource limit.
+        await new Promise((resolve) => setTimeout(resolve, 500 * (i + 1)));
         continue;
       }
 
@@ -35,6 +50,7 @@ async function fetchWithRetry(url: string, options: RequestInit = {}, retries = 
           text.substring(0, 200)
         );
         if (i === retries - 1) return null;
+        await new Promise((resolve) => setTimeout(resolve, 500 * (i + 1)));
         continue;
       }
 
