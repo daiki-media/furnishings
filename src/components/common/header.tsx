@@ -9,9 +9,13 @@ import { Product } from "@/lib/interfaces"; // Import from interfaces
 interface PageHeaderProps {
     hide?: boolean;
     title?: string;
+    // Pages that render their own H1 (e.g. category pages) pass "p" so the
+    // banner title is not a second H1 (W42-033).
+    titleAs?: "h1" | "p";
 }
 
-export default function PageHeader({ hide = false, title }: PageHeaderProps) {
+export default function PageHeader({ hide = false, title, titleAs = "h1" }: PageHeaderProps) {
+    const TitleTag = titleAs;
     const pathname = usePathname();
     const paths = pathname.split("/").filter(Boolean);
     const lastSegment = paths[paths.length - 1];
@@ -94,9 +98,9 @@ export default function PageHeader({ hide = false, title }: PageHeaderProps) {
 
     return (
         <div className="bg-black py-12 text-center h-48">
-            <h1 className="text-4xl font-bold text-orange-600 italic">
+            <TitleTag className="text-4xl font-bold text-orange-600 italic">
                 {pageTitle}
-            </h1>
+            </TitleTag>
             <div className="mt-2 text-white text-sm">
                 <Link href="/" className="hover:underline text-white">
                     Home

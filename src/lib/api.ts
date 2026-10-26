@@ -65,7 +65,26 @@ async function fetchWithRetry(url: string, options: RequestInit = {}, retries = 
 // non-2xx, bad payload) as opposed to the CMS legitimately reporting zero
 // products, so callers can tell "temporarily unavailable" from "no products"
 // instead of rendering both as a bare empty state.
+// The catalogue response is ~3.4 MB, over Next's 2 MB fetch-cache limit, so
+// it is never stored in the Data Cache and every render or ISR revalidation
+// downloads it again. Keep the last good copy in memory so a CMS timeout
+// serves slightly old data instead of an empty catalogue (W42-005).
+let lastGoodProducts: any[] | null = null;
+
 const fetchProductsWithStatus = async (): Promise<{ data: any[]; failed: boolean }> => {
+  const result = await fetchProductsFromCms();
+  if (!result.failed) {
+    if (result.data.length > 0) lastGoodProducts = result.data;
+    return result;
+  }
+  if (lastGoodProducts) {
+    console.error("Products API failed; serving last good catalogue from memory");
+    return { data: lastGoodProducts, failed: false };
+  }
+  return result;
+};
+
+const fetchProductsFromCms = async (): Promise<{ data: any[]; failed: boolean }> => {
   try {
     const isBrowser = typeof window !== "undefined";
     const res = await fetchWithRetry(
@@ -76,7 +95,7 @@ const fetchProductsWithStatus = async (): Promise<{ data: any[]; failed: boolean
     if (!res) return { data: [], failed: true };
 
     const data = await res.json();
-    if (!data.success) {
+    if (!data.success || !Array.isArray(data.data)) {
       console.error("Products API responded without success:", data);
       return { data: [], failed: true };
     }
@@ -131,6 +150,18 @@ function cleanSlug(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+// Thrown when the CMS could not be reached, so a product page fails (and ISR
+// keeps the last good cached version) instead of rendering "Product Not
+// Found" with noindex and caching that for a real product (W42-005).
+export class CmsUnavailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "CmsUnavailableError";
+  }
+}
+
+// Returns the product, or null only when the CMS answered and the product
+// does not exist. Throws CmsUnavailableError when the CMS could not answer.
 export const getProductBySlug = cache(async (slug: string) => {
   const normalizedSlug = slug.toLowerCase().trim();
 
@@ -141,7 +172,7 @@ export const getProductBySlug = cache(async (slug: string) => {
     // full, unfiltered catalog (same byte size as /api/products), which
     // made the old `data.data[0]` fallback silently return whichever
     // product happened to be first in the catalog for every slug.
-    const products = await getProducts();
+    const { data: products, failed: catalogFailed } = await getProductsWithStatus();
     const found = products.find(
       (p: any) => p.slug?.toLowerCase().trim() === normalizedSlug
     );
@@ -174,13 +205,21 @@ export const getProductBySlug = cache(async (slug: string) => {
         if (match) return match;
         // Only trust a single-item response as an actual filter match.
         if (data.data.length === 1) return data.data[0];
+        return null;
       }
     }
 
+    // Neither the catalogue nor the slug lookup got an answer from the CMS:
+    // we cannot tell whether the product exists, so do not report it missing.
+    if (catalogFailed) {
+      throw new CmsUnavailableError(`CMS unavailable while loading product "${slug}"`);
+    }
     return null;
   } catch (error) {
     console.error("Failed to fetch product by slug:", error);
-    return null;
+    throw error instanceof CmsUnavailableError
+      ? error
+      : new CmsUnavailableError(`Product lookup failed for "${slug}"`);
   }
 });
 

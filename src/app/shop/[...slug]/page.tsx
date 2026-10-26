@@ -1,8 +1,7 @@
 import { notFound, permanentRedirect, redirect } from "next/navigation";
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import SingleProduct from "@/components/shop/single-product";
-import ProductLoading from "@/components/shop/product-loading";
+import ProductSchema from "@/components/schema/ProductSchema";
 import { getProductBySlug, getProducts } from "@/lib/api";
 import { getFullImageUrl, Product } from "@/lib/interfaces";
 
@@ -52,14 +51,17 @@ export default async function ProductPage({
   if (slug.length === 2) {
     const [category, productSlug] = slug;
 
+    // The lookup, notFound() and redirects run here, before anything is
+    // streamed. They used to run inside <Suspense>, where the 200 status
+    // had already been sent: a missing product became a cached 200
+    // "Product Not Found" page with noindex (soft 404), and redirects
+    // became client-side meta refreshes instead of real 307/308s (W42-005).
     return (
       <main>
         {/* No PageHeader here: SingleProduct renders its own product-specific
             H1 and breadcrumb below. Rendering both produced two <h1>s per
             product page and a duplicate, client-fetched breadcrumb. */}
-        <Suspense fallback={<ProductLoading />}>
-          <ProductContent category={category} productSlug={productSlug} />
-        </Suspense>
+        {await ProductContent({ category, productSlug })}
       </main>
     );
   }
@@ -124,10 +126,13 @@ async function ProductContent({
   }
 
   return (
-    <SingleProduct
-      productData={productWithFullUrls}
-      relatedProducts={relatedProducts}
-    />
+    <>
+      <ProductSchema product={productWithFullUrls} />
+      <SingleProduct
+        productData={productWithFullUrls}
+        relatedProducts={relatedProducts}
+      />
+    </>
   );
 }
 

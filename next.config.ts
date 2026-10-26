@@ -74,15 +74,11 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      {
-        source: "/shop/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, s-maxage=3600, stale-while-revalidate=86400",
-          },
-        ],
-      }
+      // No custom Cache-Control for /shop: product pages use ISR
+      // (revalidate = 300) and Next sets the CDN headers itself. The old
+      // "s-maxage=3600, stale-while-revalidate=86400" header was also sent
+      // on error / "Product Not Found" responses, so the CDN could keep
+      // serving a broken product page for up to a day (W42-005).
     ];
   },
 };

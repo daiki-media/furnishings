@@ -53,7 +53,8 @@ export default async function CategoryPageRoute({ params }: Props) {
 
   return (
     <main>
-      <PageHeader />
+      {/* CategoryPage renders the page's H1 ("{Category} in Malaysia"). */}
+      <PageHeader titleAs="p" />
       <Suspense fallback={<ProductsLoading />}>
         <CategoryPage
           slug={categorySlug}

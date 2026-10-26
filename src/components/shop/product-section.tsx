@@ -176,6 +176,16 @@ function ProductsSectionContent({
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [router, searchParams]);
 
+    // Crawlable href for each page number. Keeps the active filters/sort;
+    // page 1 drops the parameter so it matches the canonical /shop URL.
+    const getPageHref = useCallback((newPage: number) => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (newPage > 1) params.set('page', newPage.toString());
+        else params.delete('page');
+        const query = params.toString();
+        return `/shop${query ? `?${query}` : ''}`;
+    }, [searchParams]);
+
     // Get unique brands from all products (not just current page)
     const brands = useMemo(() => {
         const uniqueBrands = new Set<string>();
@@ -295,6 +305,7 @@ function ProductsSectionContent({
                                         currentPage={page}
                                         totalPages={totalPages}
                                         onPageChange={handlePageChange}
+                                        getPageHref={getPageHref}
                                     />
                                 )}
                             </>
@@ -376,14 +387,19 @@ function ProductCard({
 }
 
 // Pagination Component
+// Page numbers are real <a href="/shop?page=N"> links (W42-033). They were
+// <button>s, so crawlers could only reach the 12 products on page 1 from
+// /shop. A plain click still navigates client-side via onPageChange.
 function Pagination({ 
     currentPage, 
     totalPages, 
-    onPageChange 
+    onPageChange,
+    getPageHref,
 }: { 
     currentPage: number; 
     totalPages: number; 
     onPageChange: (page: number) => void;
+    getPageHref: (page: number) => string;
 }) {
     const getVisiblePages = () => {
         if (totalPages <= 7) {
@@ -401,19 +417,34 @@ function Pagination({
 
     const visiblePages = getVisiblePages();
 
+    const handleClick = (target: number) => (e: React.MouseEvent<HTMLAnchorElement>) => {
+        // Let ctrl/cmd/shift/middle clicks open a new tab as normal links do.
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+        e.preventDefault();
+        onPageChange(target);
+    };
+
+    const navClass = (disabled: boolean) => `px-4 py-2 rounded-md transition-colors ${
+        disabled
+            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            : 'bg-orange-600 text-white hover:bg-orange-700'
+    }`;
+
     return (
-        <div className="flex justify-center items-center space-x-2 mt-12">
-            <button
-                onClick={() => onPageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`px-4 py-2 rounded-md transition-colors ${
-                    currentPage === 1
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-orange-600 text-white hover:bg-orange-700'
-                }`}
-            >
-                Previous
-            </button>
+        <nav aria-label="Product pages" className="flex justify-center items-center space-x-2 mt-12">
+            {currentPage === 1 ? (
+                <span aria-disabled="true" className={navClass(true)}>Previous</span>
+            ) : (
+                <Link
+                    href={getPageHref(currentPage - 1)}
+                    rel="prev"
+                    scroll={false}
+                    onClick={handleClick(currentPage - 1)}
+                    className={navClass(false)}
+                >
+                    Previous
+                </Link>
+            )}
             
             <div className="flex space-x-2">
                 {visiblePages.map((page, index) => (
@@ -422,33 +453,38 @@ function Pagination({
                             ...
                         </span>
                     ) : (
-                        <button
+                        <Link
                             key={page}
-                            onClick={() => onPageChange(page as number)}
-                            className={`w-10 h-10 rounded-md transition-colors ${
+                            href={getPageHref(page as number)}
+                            scroll={false}
+                            onClick={handleClick(page as number)}
+                            aria-current={currentPage === page ? 'page' : undefined}
+                            className={`w-10 h-10 flex items-center justify-center rounded-md transition-colors ${
                                 currentPage === page
                                     ? 'bg-orange-600 text-white'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                         >
                             {page}
-                        </button>
+                        </Link>
                     )
                 ))}
             </div>
 
-            <button
-                onClick={() => onPageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className={`px-4 py-2 rounded-md transition-colors ${
-                    currentPage === totalPages
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-orange-600 text-white hover:bg-orange-700'
-                }`}
-            >
-                Next
-            </button>
-        </div>
+            {currentPage === totalPages ? (
+                <span aria-disabled="true" className={navClass(true)}>Next</span>
+            ) : (
+                <Link
+                    href={getPageHref(currentPage + 1)}
+                    rel="next"
+                    scroll={false}
+                    onClick={handleClick(currentPage + 1)}
+                    className={navClass(false)}
+                >
+                    Next
+                </Link>
+            )}
+        </nav>
     );
 }
 
