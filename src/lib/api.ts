@@ -240,7 +240,7 @@ export const getProductBySlug = cache(async (slug: string) => {
 });
 
 
-const fetchCategories = async () => {
+const fetchCategoriesWithStatus = async (): Promise<{ data: any[]; failed: boolean }> => {
   try {
     const isBrowser = typeof window !== "undefined";
     const res = await fetchWithRetry(
@@ -248,15 +248,38 @@ const fetchCategories = async () => {
       isBrowser ? {} : { next: { revalidate: 3600 } }
     );
 
-    if (!res) return [];
+    if (!res) return { data: [], failed: true };
 
     const data = await res.json();
-    return data.success ? data.data : [];
+    if (!data.success || !Array.isArray(data.data)) return { data: [], failed: true };
+    return { data: data.data, failed: false };
   } catch (error) {
     console.error("Failed to fetch categories:", error);
-    return [];
+    return { data: [], failed: true };
   }
 };
+
+const fetchCategories = async () => (await fetchCategoriesWithStatus()).data;
+
+/*
+ * Strict versions for ISR pages (category pages). The plain getProducts() /
+ * getCategories() return [] when the CMS fails, which is right for client
+ * widgets but wrong for a cached page: /category/flooring was cached as
+ * "0 products found" for 30 minutes after a CMS failure during the 26 Oct
+ * deploy. Throwing instead makes ISR keep the last good page (and on a fresh
+ * build, fails the build so the previous deployment stays live).
+ */
+export const getProductsOrThrow = cache(async () => {
+  const { data, failed } = await getProductsWithStatus();
+  if (failed) throw new CmsUnavailableError("CMS unavailable while loading the product catalogue");
+  return data;
+});
+
+export const getCategoriesOrThrow = cache(async () => {
+  const { data, failed } = await fetchCategoriesWithStatus();
+  if (failed) throw new CmsUnavailableError("CMS unavailable while loading categories");
+  return data;
+});
 
 // Same browser-side memoization as products: navbar + footer both call
 // getCategories() on every page, so without this the request fires repeatedly.
