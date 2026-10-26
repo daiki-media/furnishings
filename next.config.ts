@@ -2,6 +2,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    // Serve images straight from their source instead of through Vercel's
+    // image optimizer. The project ran out of its image optimization quota
+    // (Oct 2026): every not-yet-cached size returned HTTP 402
+    // OPTIMIZED_IMAGE_REQUEST_PAYMENT_REQUIRED and showed as a broken image.
+    // The CMS product JPGs are already small (~40-80 KB).
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
@@ -46,6 +52,8 @@ const nextConfig: NextConfig = {
         ["eclipse-premium---eclipse-medium-cool-grey-0967", "eclipse-premium-eclipse-medium-cool-grey-0967"],
         ["versafloor-oak-vinyl-sheet---cocoa-brown", "versafloor-oak-vinyl-sheet-cocoa-brown"],
         ["-tapiflex-essential-50-stamp-dark-blue", "tapiflex-tiles-50-stamp-dark-blue"],
+        // Slug had been set to a pasted CMS admin URL (fixed 26 Oct 2026).
+        ["httpscmsfurnishingsdaikimediacomadminproducts845preview", "tapiflex-excellence-19db-uni-deep-red"],
       ].map(([from, to]) => ({
         source: `/shop/:category/${from}`,
         destination: `/shop/:category/${to}`,
