@@ -5,7 +5,7 @@ import Navbar from "@/components/common/navbar";
 import Footer from "@/components/common/footer";
 import Script from "next/script";
 import FloatingButton from "@/components/common/FloatingButton";
-import ReviewSchema from "@/components/schema/ReviewSchema";
+import LocalBusinessSchema from "@/components/schema/LocalBusinessSchema";
 import DynamicBreadcrumbSchema from "@/components/schema/BreadcrumbSchema";
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -78,7 +78,7 @@ export default function RootLayout({
         <Navbar />
         <DynamicBreadcrumbSchema />
         {children}
-        <ReviewSchema />
+        <LocalBusinessSchema />
         <FloatingButton />
         <Footer />
       </body>

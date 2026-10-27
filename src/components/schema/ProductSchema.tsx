@@ -21,9 +21,19 @@ export default function ProductSchema({ product }: { product: Product }) {
     (src): src is string => typeof src === "string" && src.startsWith("http")
   );
 
+  // Use the short description the product page shows, so the schema matches
+  // visible text. The SEO meta description is only a fallback: most of them
+  // end with a "Free quote" sales line that is not product information.
+  const toPlainText = (html?: string | null) =>
+    (html || "")
+      .replace(/<[^>]*>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/\s+/g, " ")
+      .trim();
   const description =
-    product.seo?.meta_description?.trim() ||
-    product.description?.short?.trim() ||
+    toPlainText(product.description?.short) ||
+    toPlainText(product.seo?.meta_description) ||
     undefined;
 
   // The CMS sends specifications as an array of {key, value} for most
